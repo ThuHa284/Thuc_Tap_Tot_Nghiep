@@ -1,0 +1,12 @@
+{
+    "name": "ThiTracNghiem",
+    "alias": "thitracnghiem",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "activate": 1,
+    "providers": [
+        "Modules\\ThiTracNghiem\\Providers\\ThiTracNghiemServiceProvider"
+    ],
+    "files": []
+}

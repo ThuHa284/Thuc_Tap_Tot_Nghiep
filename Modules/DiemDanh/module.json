@@ -1,0 +1,11 @@
+{
+    "name": "DiemDanh",
+    "alias": "diemdanh",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DiemDanh\\Providers\\DiemDanhServiceProvider"
+    ],
+    "files": []
+}
