@@ -1,0 +1,30 @@
+# ==========================================================
+# THỰC TẬP TỐT NGHIỆP
+# ==========================================================
+
+# 1. QUYỀN TỔNG QUÁT
+# Người giám sát toàn bộ project
+* @ThuHa284
+
+# 2. CẤU HÌNH HỆ THỐNG & BACKEND CORE
+/config/                                @Trananhkiet4 @ThuHa284
+/database/migrations/                   @Trananhkiet4 @ThuHa284
+/composer.json                          @Trananhkiet4 @ThuHa284
+/package.json                           @Trananhkiet4 @ThuHa284
+/app/Providers/                         @Trananhkiet4 @ThuHa284
+
+# 3. GIAO DIỆN MASTER & ASSETS
+/resources/views/layouts/               @Nho3011 @ThuHa284
+/resources/sass/                        @Nho3011 @ThuHa284
+/resources/js/                          @Nho3011 @ThuHa284
+/public/                                @Nho3011 @ThuHa284
+
+# 4. QUẢN LÝ MODULES
+# Các team sẽ tự review nội bộ, nhưng Team Core vẫn có quyền kiểm soát cuối
+/Modules/TinTuc/                        @leader_tintuc @ThuHa284 @Trananhkiet4 @Nho3011
+/Modules/ThiTracNghiem/                 @leader_thitracnghiem @ThuHa284 @Trananhkiet4 @Nho3011
+/Modules/DiemDanh/                      @leader_diemdanh @ThuHa284 @Trananhkiet4 @Nho3011
+
+# 5. TÀI LIỆU & QUY TRÌNH
+/GUIDE.md                               @ThuHa284 @Trananhkiet4 @Nho3011
+/.github/CODEOWNERS                     @ThuHa284 @Trananhkiet4 @Nho3011

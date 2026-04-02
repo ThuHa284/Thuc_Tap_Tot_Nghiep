@@ -1,0 +1,11 @@
+{
+    "name": "TinTuc",
+    "alias": "tintuc",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\TinTuc\\Providers\\TinTucServiceProvider"
+    ],
+    "files": []
+}
