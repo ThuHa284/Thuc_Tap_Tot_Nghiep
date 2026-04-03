@@ -6,6 +6,7 @@
 <div class="card">
     <div class="card-header">Điểm Danh Sinh Viên</div>
     <div class="card-body">
-        <p>Đây là giao diện của Module Điểm Danh Sinh Viên đã được nhúng vào Master Layout.</p>
+        <p>Đây là giao diện module Điểm Danh Sinh Viên đã nhúng vào Master Layout.</p>
     </div>
-    @endsection
+</div>
+@endsection
