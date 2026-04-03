@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/diemdanh",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\DiemDanh\\": "app/",
+            "Modules\\DiemDanh\\Database\\Factories\\": "database/factories/",
+            "Modules\\DiemDanh\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\DiemDanh\\Tests\\": "tests/"
+        }
+    }
+}
