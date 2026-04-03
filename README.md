@@ -1,66 +1,135 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PROJECT GUIDELINES
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Dự án
 
-## About Laravel
+**Tên:** Ứng dụng web cho phòng công tác sinh viên.  
+**Công nghệ:** Laravel 12, MySQL, Bootstrap 5  
+**Công cụ:** GitHub
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 1. Mục tiêu
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Làm việc nhóm hiệu quả
+- Tránh conflict code
+- Quản lý source code rõ ràng bằng Git
+- Phân chia công việc theo module
 
-## Learning Laravel
+## 2. Chiến lược nhánh (Branch Strategy)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2.1 Nhánh chính
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- `main`
+  - Chứa code ổn định
+  - Không code trực tiếp trên nhánh này
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2.2 Nhánh phát triển
 
-## Laravel Sponsors
+- `develop`
+  - Tổng hợp code từ các thành viên
+  - Test trước khi đưa vào `main`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2.3 Nhánh chức năng
 
-### Premium Partners
+feature/<ten-chuc-nang>
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Ví dụ:
 
-## Contributing
+feature/login
+feature/attendance
+feature/exam
+feature/news
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Quy tắc:
 
-## Code of Conduct
+- Mỗi chức năng → 1 branch riêng
+- Làm việc trên branch của mình
+- Sau khi hoàn thành → merge vào `develop`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 3. Quy tắc Commit
 
-## Security Vulnerabilities
+### Format:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+<type>: <mô tả>
 
-## License
+### Các loại commit:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`type`:
+
+- `feat` : Thêm mới tính năng.
+- `fix` : Sửa lỗi (bug).
+- `refactor` : Thay đổi cấu trúc code nhưng không đổi chức năng.
+- `chore` : Việc lặt vặt (config, script, build, không ảnh hưởng logic chính).
+- `docs` : Thay đổi tài liệu.
+- `style` : Thay đổi format, indent, không đổi logic.
+- `module`: tên module hoặc khu vực chính:
+  - `auth`, `category`, `product`, `cart`, `order`, `common`, ...
+
+### Ví dụ:
+
+feat: thêm chức năng đăng nhập
+feat: tạo trang điểm danh
+fix: sửa lỗi không lưu dữ liệu sinh viên
+refactor: tách controller
+
+### Nguyên tắc commit
+
+- Mỗi commit nên thể hiện **một thay đổi logic rõ ràng** (1 chức năng, 1 bug hoặc 1 nhóm chỉnh sửa nhỏ có liên quan).
+- Tránh commit kiểu:
+  - `fix`, `update`, `change`, `test`, `temp`, `commit lan 1`, ...
+- Trước khi commit:
+  - Đảm bảo **build không lỗi** (ví dụ: `dotnet build` chạy thành công).
+  - Hạn chế commit code chưa chạy được trừ khi có lý do kỹ thuật rõ ràng (và ghi chú trong commit message).
+- Không commit:
+  - File build: `bin/`, `obj/`, `.vs/`, ...
+  - File cá nhân: `*.user`, `*.suo`, `.DS_Store`,...
+  - Thông tin nhạy cảm: mật khẩu, API key, connection string thật (sử dụng appsettings.Development + user secret hoặc biến môi trường).
+
+## 4. Workflow làm việc
+
+### Bước 1: Tạo branch
+
+git checkout develop
+git pull
+git checkout -b feature/<ten-chuc-nang>
+
+### Bước 2: Làm việc
+
+git add .
+git commit -m "feat: mô tả"
+git push origin feature/<ten-chuc-nang>
+
+### Bước 3: Merge
+
+- Tạo Pull Request → `develop`
+- Sau khi test ổn → merge vào `main`
+
+## 5. Phân chia module
+
+Ví dụ:
+
+- Team 1: ...
+- Team 2: Điểm danh
+- Team 3: Thi trắc nghiệm
+- Team 4: Tin tức
+
+## 6. Database
+
+- Dùng chung 1 database
+- Không tự ý sửa cấu trúc bảng
+- Nếu cần thay đổi → trao đổi với nhóm
+
+## 7. Giao diện
+
+- Dùng Bootstrap 5
+- Dùng layout chung
+
+@extends('layout')
+@section('content')
+
+## 8. Quy tắc chung
+
+- Không code trực tiếp trên `main`
+- Luôn tạo branch khi làm việc
+- Commit rõ ràng
+- Không sửa phần của người khác nếu chưa trao đổi
