@@ -22,12 +22,16 @@
 - `main`
     - Chứa code ổn định
     - Không code trực tiếp trên nhánh này
+  - Chứa code ổn định
+  - Không code trực tiếp trên nhánh này
 
 ### 2.2 Nhánh phát triển
 
 - `develop`
     - Tổng hợp code từ các thành viên
     - Test trước khi đưa vào `main`
+  - Tổng hợp code từ các thành viên
+  - Test trước khi đưa vào `main`
 
 ### 2.3 Nhánh chức năng
 
@@ -64,6 +68,7 @@ Quy tắc:
 - `style` : Thay đổi format, indent, không đổi logic.
 - `module`: tên module hoặc khu vực chính:
     - `auth`, `category`, `product`, `cart`, `order`, `common`, ...
+  - `auth`, `category`, `product`, `cart`, `order`, `common`, ...
 
 ### Ví dụ:
 
@@ -84,6 +89,14 @@ refactor: tách controller
     - File build: `bin/`, `obj/`, `.vs/`, ...
     - File cá nhân: `*.user`, `*.suo`, `.DS_Store`,...
     - Thông tin nhạy cảm: mật khẩu, API key, connection string thật (sử dụng appsettings.Development + user secret hoặc biến môi trường).
+  - `fix`, `update`, `change`, `test`, `temp`, `commit lan 1`, ...
+- Trước khi commit:
+  - Đảm bảo **build không lỗi** (ví dụ: `dotnet build` chạy thành công).
+  - Hạn chế commit code chưa chạy được trừ khi có lý do kỹ thuật rõ ràng (và ghi chú trong commit message).
+- Không commit:
+  - File build: `bin/`, `obj/`, `.vs/`, ...
+  - File cá nhân: `*.user`, `*.suo`, `.DS_Store`,...
+  - Thông tin nhạy cảm: mật khẩu, API key, connection string thật (sử dụng appsettings.Development + user secret hoặc biến môi trường).
 
 ## 4. Workflow làm việc
 
