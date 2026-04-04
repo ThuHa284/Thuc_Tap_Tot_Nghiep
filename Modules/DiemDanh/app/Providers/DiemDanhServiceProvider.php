@@ -7,9 +7,14 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class DiemDanhServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->register(RouteServiceProvider::class);
+    }
     /**
      * The name of the module.
      */
+
     protected string $name = 'DiemDanh';
 
     /**
@@ -43,4 +48,13 @@ class DiemDanhServiceProvider extends ModuleServiceProvider
     // {
     //     $schedule->command('inspire')->hourly();
     // }
+    public function boot(): void
+{
+    parent::boot();
+
+    $this->loadViewsFrom(
+        module_path($this->name, 'resources/views'),
+        $this->nameLower
+    );
+}
 }

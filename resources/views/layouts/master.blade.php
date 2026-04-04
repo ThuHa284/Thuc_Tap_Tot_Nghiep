@@ -82,11 +82,10 @@
             <hr>
 
             <!-- Links module luôn hiển thị -->
-            <a href="#">🏠 Trang chủ</a>
-            <a href="#">📝 Thi trắc nghiệm</a>
-            <a href="#">📷 Điểm danh</a>
-            <a href="#">📰 Tin tức</a>
-
+            <a href="#">Trang chủ</a>
+            <a href="{{ route('thitracnghiem.index') }}">Thi trắc nghiệm</a>
+            <a href="{{ route('diemdanh.index') }}">Điểm danh</a>
+            <a href="{{ route('tintuc.index') }}">Tin tức</a>
         </div>
 
         <!-- CONTENT -->
