@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ChirpController;
-use Modules\ThiTracNghiem\App\Http\Controllers\ThiTracNghiemController;
-use Modules\DiemDanh\App\Http\Controllers\DiemDanhController;
-use Modules\TinTuc\App\Http\Controllers\TinTucController;
+use Modules\ThiTracNghiem\Http\Controllers\ThiTracNghiemController;
+use Modules\DiemDanh\Http\Controllers\DiemDanhController;
+use Modules\TinTuc\Http\Controllers\TinTucController;
 
 Route::get('/', function () {
     return view('layouts.master');

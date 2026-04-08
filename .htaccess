@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # B&#7887; qua n&#7871;u &#273;&#432;&#7901;ng d&#7851;n n&#7897;i b&#7897; &#273;ã x&#7917; lý th&#432; m&#7909;c public
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Ghi l&#7841;i URL ng&#7847;m vào th&#432; m&#7909;c public (Ch&#7881; dùng c&#7901; [L], KHÔNG dùng R=301)
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

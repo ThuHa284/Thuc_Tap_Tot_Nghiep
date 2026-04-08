@@ -4,4 +4,4 @@
 .env
 public/build
 modules_statuses.json
-/.github
+/.github    

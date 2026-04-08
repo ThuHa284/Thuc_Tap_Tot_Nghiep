@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\TinTuc\App\Http\Controllers;
+namespace Modules\TinTuc\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

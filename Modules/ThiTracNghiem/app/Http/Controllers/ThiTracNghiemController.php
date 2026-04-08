@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ThiTracNghiem\App\Http\Controllers;
+namespace Modules\ThiTracNghiem\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

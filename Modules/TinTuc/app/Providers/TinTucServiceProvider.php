@@ -7,6 +7,10 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class TinTucServiceProvider extends ModuleServiceProvider
 {
+    protected function registerServices(): void
+    {
+        // có thể để trống
+    }
     /**
      * The name of the module.
      */

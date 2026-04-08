@@ -2,11 +2,25 @@
 
 namespace Modules\ThiTracNghiem\Providers;
 
-use Nwidart\Modules\Support\ModuleServiceProvider;
+use Nwidart\Modules\ModulesServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
-class ThiTracNghiemServiceProvider extends ModuleServiceProvider
+class ThiTracNghiemServiceProvider extends ModulesServiceProvider
 {
+    // ✅ BẮT BUỘC phải có
+    protected function registerServices(): void
+    {
+        // có thể để trống
+    }
+    public function boot(): void
+    {
+        parent::boot(); // 🔥 BẮT BUỘC
+
+        $this->loadViewsFrom(
+            module_path('ThiTracNghiem', 'Resources/views'),
+            'thitracnghiem'
+        );
+    }
     /**
      * The name of the module.
      */

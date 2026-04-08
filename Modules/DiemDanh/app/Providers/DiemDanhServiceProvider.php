@@ -2,14 +2,19 @@
 
 namespace Modules\DiemDanh\Providers;
 
-use Nwidart\Modules\Support\ModuleServiceProvider;
+use Nwidart\Modules\ModulesServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
-class DiemDanhServiceProvider extends ModuleServiceProvider
+class DiemDanhServiceProvider extends ModulesServiceProvider
 {
     /**
      * The name of the module.
      */
+
+    protected function registerServices(): void
+    {
+        // Có thể để trống cũng được
+    }
 
     protected string $name = 'DiemDanh';
 
