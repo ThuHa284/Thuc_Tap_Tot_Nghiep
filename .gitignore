@@ -1,0 +1,7 @@
+/node_modules
+/vendor
+/bootstrap/cache/*
+.env
+public/build
+modules_statuses.json
+/.github    
