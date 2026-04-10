@@ -2,13 +2,23 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\ChirpController;
 use Modules\ThiTracNghiem\Http\Controllers\ThiTracNghiemController;
 use Modules\DiemDanh\Http\Controllers\DiemDanhController;
 use Modules\TinTuc\Http\Controllers\TinTucController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
-    return view('layouts.master');
+    return view('home');
+})->name('home');
+
+Route::middleware('guest')->group(function () {
+
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+});
+
+// Nhóm các Route dành cho Auth (Đã đăng nhập)
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // ================== MODULE THI TRẮC NGHIỆM ==================

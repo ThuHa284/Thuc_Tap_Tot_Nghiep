@@ -3,134 +3,78 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'CTSV')</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'CTSV - STU')</title>
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .header {
-            background: #0d6efd;
-            color: white;
-            padding: 10px 20px;
-            font-weight: bold;
-        }
-
-        .sidebar {
-            width: 280px;
-            height: 100vh;
-            background: #f8f9fa;
-            border-right: 1px solid #ddd;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 12px;
-            color: #333;
-            text-decoration: none;
-        }
-
-        .sidebar a:hover {
-            background: #e9ecef;
-        }
-
-        .main {
-            flex: 1;
-            padding: 20px;
-        }
-
-        .banner img {
-            width: 100%;
-            border-radius: 10px;
-        }
-
-        .card-box {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body>
+<body class="bg-light">
 
-    <!-- HEADER -->
-    <div class="header d-flex align-items-center">
-        <img src="https://via.placeholder.com/40" class="me-2">
-        TRƯỜNG ĐẠI HỌC CÔNG NGHỆ SÀI GÒN
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" style="background-color: #004a99;">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/">
 
-    <div class="d-flex">
+                <img src="{{ asset('static/imgs/logostu.png') }}"
+                    alt="Logo STU"
+                    height="40"
+                    class="d-inline-block align-top me-1"> <span class="text-white fw-bold">CTSV</span>
+            </a>
 
-        <div class="sidebar p-3">
-            <h5>Tài khoản</h5>
             @auth
-            <p>Xin chào, {{ auth()->user()->name }}</p>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn btn-danger w-100 mb-3">Đăng xuất</button>
-            </form>
-            @else
-            <p>Chưa đăng nhập</p>
+            <div class="ms-auto d-flex align-items-center text-white">
+                <span class="me-3">Chào, <strong>{{ auth()->user()->name }}</strong></span>
+                <form action="{{ route('logout') }}" method="POST" class="m-0">
+                    @csrf
+                    <button class="btn btn-sm btn-outline-light">Đăng xuất</button>
+                </form>
+            </div>
             @endauth
-
-
-            <hr>
-
-            <!-- Links module luôn hiển thị -->
-            <a href="#">Trang chủ</a>
-            <a href="{{ route('thitracnghiem.index') }}">Thi trắc nghiệm</a>
-            <a href="{{ route('diemdanh.index') }}">Điểm danh</a>
-            <a href="{{ route('tintuc.index') }}">Tin tức</a>
         </div>
+    </nav>
 
-        <!-- CONTENT -->
-        <div class="main">
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-white sidebar shadow-sm p-3" style="min-height: 100vh;">
+                <ul class="nav flex-column nav-pills">
+                    <li class="nav-item">
+                        <a class="nav-link active mb-2" href="/"><i class="fas fa-home me-2"></i> Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-dark mb-2" href="{{ route('diemdanh.index') }}"><i class="fas fa-camera me-2 text-primary"></i>Điểm danh</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-dark mb-2" href="{{ route('thitracnghiem.index')}}"><i class="fas fa-pencil me-2 text-success"></i> Thi trắc nghiệm</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-dark mb-2" href="{{ route('tintuc.index')}}"><i class="fas fa-bullhorn me-2 text-warning"></i> Tin tức</a>
+                    </li>
+                </ul>
 
-            <!-- Banner -->
-            <div class="banner mb-4">
-                <img src="https://via.placeholder.com/1200x300">
-            </div>
-
-            <!-- Section card -->
-            <div class="card card-box mb-4">
-                <div class="card-header fw-bold">THÔNG TIN QUẢN LÝ ĐÀO TẠO</div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="card text-center p-3">
-                                <h6>Quy chế</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center p-3">
-                                <h6>Kiểm định</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center p-3">
-                                <h6>Biểu đồ học tập</h6>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center p-3">
-                                <h6>Thông tin đào tạo</h6>
-                            </div>
-                        </div>
-                    </div>
+            </nav>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                @if(Route::is('home'))
+                <div id="main-banner" class="mb-4 rounded-4 overflow-hidden shadow-sm">
+                    <img src="{{ asset('static/imgs/banner_stu.png') }}"
+                        class="img-fluid w-100"
+                        style="max-height: 350px; object-fit: cover;"
+                        alt="STU Banner">
                 </div>
-            </div>
+                @endif
+                <div class="module-content bg-white p-4 rounded-3 shadow-sm" style="min-height: 80vh;">
+                    @yield('content')
+                </div>
 
-            @yield('content')
-
+            </main>
         </div>
 
     </div>
 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
