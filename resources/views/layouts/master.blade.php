@@ -52,6 +52,9 @@
                     <li class="nav-item">
                         <a class="nav-link link-dark mb-2" href="{{ route('tintuc.index')}}"><i class="fas fa-bullhorn me-2 text-warning"></i> Tin tức</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link link-dark mb-2" href="{{ route('xacnhansv.index')}}"><i class="fas fa-user-check me-2 text-info"></i> Xác nhận Sinh Viên</a>
+                    </li>
                 </ul>
 
             </nav>
