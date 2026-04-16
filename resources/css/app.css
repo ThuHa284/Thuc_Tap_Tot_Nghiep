@@ -1,2 +1,65 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Tùy chỉnh màu sắc và hiệu ứng STU */
+:root {
+    --stu-blue: #004a99;
+}
+
+.sidebar .nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--stu-blue) !important;
+}
+
+.sidebar .nav-link:hover:not(.active) {
+    background-color: #e7f1ff;
+    padding-left: 1.25rem;
+}
+
+.card-feature {
+    transition: all 0.3s;
+    border: none !important;
+    background-color: #fff;
+}
+
+.card-feature:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    background-color: var(--stu-blue);
+    color: white !important;
+}
+
+.card-feature:hover i,
+.card-feature:hover h6 {
+    color: white !important;
+}
+
+.card-feature {
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.card-feature:hover {
+    transform: translateY(-5px);
+    border-color: #0d6efd;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-faculty {
+    transition: all 0.2s ease;
+    background-color: #fdfdfd;
+}
+
+.card-faculty:hover {
+    background-color: #ffffff;
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+}
+
+.icon-faculty {
+    width: 50px;
+    text-align: center;
+}

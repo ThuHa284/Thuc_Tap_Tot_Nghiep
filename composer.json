@@ -86,6 +86,9 @@
             "wikimedia/composer-merge-plugin": true
         }
     },
+    "platform": {
+        "php": "8.2.30"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
