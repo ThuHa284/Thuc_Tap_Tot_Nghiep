@@ -1,0 +1,35 @@
+name: 🚀 Deploy Production
+
+on:
+  push:
+    branches: [ "main" ] # Bạn có thể đổi thành "main" nếu đang deploy lên môi trường chính
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v3
+
+    - name: 📦 Install dependencies
+      # Chạy composer để tạo thư mục vendor trước khi deploy
+      run: composer install --no-dev --optimize-autoloader
+
+    - name: 📁 Prepare public_html folder
+      # Tạo thư mục public_html và copy 4 file cần thiết từ thư mục public
+      run: |
+        mkdir -p public_html
+        cp public/.htaccess public_html/
+        cp public/favicon.ico public_html/
+        cp public/index.php public_html/
+        cp public/robots.txt public_html/
+
+    - name: 📤 Deploy to Domain
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        # Thay đổi đường dẫn gốc thành thư mục chứa toàn bộ project
+        server-dir: /domains/ntthuha.id.vn/
