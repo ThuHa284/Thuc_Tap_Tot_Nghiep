@@ -2,5 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\TinTuc\Http\Controllers\TinTucController;
+use Modules\TinTuc\Http\Controllers\LoaiTinController;
 
-Route::get('/tintuc', [TinTucController::class, 'index'])->name('tintuc.index');
+Route::resource('tin-tuc', TinTucController::class)->names('tintuc');
+Route::resource('loai-tin', LoaiTinController::class)->names('loaitin');
