@@ -4,12 +4,8 @@ namespace Modules\TinTuc\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\TinTuc\app\Models\TinTuc;
 use Modules\TinTuc\Models\TinTuc as ModelsTinTuc;
-use Modules\TinTuc\app\Models\LoaiTin;
 use Modules\TinTuc\Models\LoaiTin as ModelsLoaiTin;
-use PhpParser\Node\Expr\AssignOp\Mod;
-use Illuminate\Support\Facades\File;
 
 class TinTucController extends Controller
 {
