@@ -17,7 +17,7 @@ class ThiTracNghiemServiceProvider extends ModulesServiceProvider
         parent::boot(); // 🔥 BẮT BUỘC
 
         $this->loadViewsFrom(
-            module_path('ThiTracNghiem', 'Resources/views'),
+            module_path('ThiTracNghiem', 'resources/views'),
             'thitracnghiem'
         );
     }
