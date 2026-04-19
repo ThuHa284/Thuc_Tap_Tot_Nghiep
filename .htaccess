@@ -1,9 +1,9 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # B&#7887; qua n&#7871;u &#273;&#432;&#7901;ng d&#7851;n n&#7897;i b&#7897; &#273;� x&#7917; l� th&#432; m&#7909;c public
+    # Bỏ qua nếu đường dẫn nội bộ đã xử lý thư mục public
     RewriteCond %{REQUEST_URI} !^/public/
 
-    # Ghi l&#7841;i URL ng&#7847;m v�o th&#432; m&#7909;c public (Ch&#7881; d�ng c&#7901; [L], KH�NG d�ng R=301)
+    # Ghi lại URL ngầm vào thư mục public (Chỉ dùng cờ [L], KHÔNG dùng R=301)
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
