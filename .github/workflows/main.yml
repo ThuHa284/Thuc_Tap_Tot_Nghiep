@@ -23,6 +23,7 @@ jobs:
       # Bước này sẽ đọc package.json, cài đặt thư viện và chạy lệnh "vite build"
       # Kết quả sẽ sinh ra thư mục public/build/ chứa manifest.json
       run: |
+        npm install
         npm run build
 
     - name: 📁 Prepare public_html folder
