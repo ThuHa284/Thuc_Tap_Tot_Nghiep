@@ -1,4 +1,4 @@
-name: 🚀 Deploy Production
+name: 🚀 Deploy Production (Vite & Tailwind v4)
 
 on:
   push:
@@ -10,21 +10,38 @@ jobs:
 
     steps:
     - name: 📥 Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js
+      # Tailwind v4 và Vite 6 yêu cầu Node.js phiên bản mới (khuyên dùng 20+)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: 📦 Install & Build Frontend
+      # Bước này sẽ đọc package.json, cài đặt thư viện và chạy lệnh "vite build"
+      # Kết quả sẽ sinh ra thư mục public/build/ chứa manifest.json
+      run: |
+        npm run build
 
     - name: 📁 Prepare public_html folder
-      # Tạo thư mục public_html và copy 4 file cần thiết từ thư mục public
+      # Chuẩn bị đúng cấu trúc thư mục trước khi upload qua FTP
       run: |
         mkdir -p public_html
-        cp public/.htaccess public_html/
-        cp public/favicon.ico public_html/
+        # Copy các file nền tảng
         cp public/index.php public_html/
-        cp public/robots.txt public_html/
+        cp public/.htaccess public_html/ 2>/dev/null || true
+        cp public/favicon.ico public_html/ 2>/dev/null || true
+        cp public/robots.txt public_html/ 2>/dev/null || true
+        # QUAN TRỌNG: Copy toàn bộ thư mục build (chứa CSS/JS đã biên dịch) vào public_html
+        cp -r public/build public_html/
 
     - name: 📤 Deploy to Domain
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        # Đẩy toàn bộ project vào thư mục gốc của domain
         server-dir: /domains/ntthuha.id.vn/
