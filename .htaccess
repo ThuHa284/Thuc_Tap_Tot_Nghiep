@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bỏ qua nếu đường dẫn nội bộ đã xử lý thư mục public
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Ghi lại URL ngầm vào thư mục public (Chỉ dùng cờ [L], KHÔNG dùng R=301)
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

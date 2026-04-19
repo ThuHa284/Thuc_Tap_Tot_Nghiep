@@ -1,0 +1,11 @@
+{
+    "name": "XacNhanSV",
+    "alias": "xacnhansv",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\XacNhanSV\\Providers\\XacNhanSVServiceProvider"
+    ],
+    "files": []
+}
