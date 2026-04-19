@@ -33,8 +33,6 @@ jobs:
         cp public/favicon.ico public_html/ 2>/dev/null || true
         cp public/robots.txt public_html/ 2>/dev/null || true
         
-        # 2. DI CHUYỂN (Move) thư mục build và static
-        mv public/build public_html/
         
         # Giả định thư mục static nằm trong public. 
         # Lệnh 2>/dev/null || true giúp CI/CD không bị lỗi ngừng lại nếu vô tình không tìm thấy thư mục này.
