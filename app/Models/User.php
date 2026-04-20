@@ -15,6 +15,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
+        'email', 
         'password',
         'studentid',
         'first_name',
@@ -26,4 +27,20 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function isAdmin()
+    {
+        return $this->gid == 0;
+    }
+
+    public function isStudent()
+    {
+        return in_array($this->gid, [1, 2, 3]);
+    }
+
+
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }
