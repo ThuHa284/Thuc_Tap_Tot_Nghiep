@@ -8,7 +8,7 @@ use Modules\XacNhanSV\Models\EtpFormStudent;
 use Modules\XacNhanSV\Models\EtpFormStudentDetail;
 use Illuminate\Http\Request;
 
-class XacNhanSVController extends Controller
+class CtsvController extends Controller
 {
     public function index()
     {
@@ -101,27 +101,12 @@ class XacNhanSVController extends Controller
         return view('xacnhansv::ctsv.my-requests', compact('submissions'));
     }
 
-    // Xem chi tiết — hiện đúng tờ giấy theo formid
     public function show(int $id)
     {
-        /** @var SavsoftUser $user */
         $user = auth()->user();
-
         $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
             ->where('uid', $user->uid)
             ->findOrFail($id);
-
-        // Load template tờ giấy thật theo formid
-        $templateMap = [
-            1 => 'xacnhansv::ctsv.show-forms.form-1-nvqs',
-            2 => 'xacnhansv::ctsv.show-forms.form-2-xac-nhan-khac',
-            3 => 'xacnhansv::ctsv.show-forms.form-3-vay-von',
-            4 => 'xacnhansv::ctsv.show-forms.form-4-hanh-chinh',
-            5 => 'xacnhansv::ctsv.show-forms.form-5-ld-tbxh',
-        ];
-
-        $template = $templateMap[$submission->formid] ?? 'xacnhansv::ctsv.show';
-        return view($template, compact('submission'));
+        return view('xacnhansv::ctsv.show', compact('submission'));
     }
-    
 }
