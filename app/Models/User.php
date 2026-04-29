@@ -15,12 +15,13 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
-        'email', 
+        'email',
         'password',
         'studentid',
         'first_name',
         'last_name',
-        'gid'
+        'gid',
+        'su'
     ];
 
     protected $hidden = [
@@ -30,17 +31,21 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->gid == 0;
+        return $this->su == 1;
     }
 
     public function isStudent()
     {
-        return in_array($this->gid, [1, 2, 3]);
+        return $this->su == 0;
+    }
+    public function isCollaborator()
+    {
+        return $this->su == -1;
     }
 
 
     public function getFullNameAttribute()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->last_name . ' ' . $this->first_name;
     }
 }

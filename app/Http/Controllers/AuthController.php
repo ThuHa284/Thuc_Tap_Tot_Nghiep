@@ -13,27 +13,27 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-   public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required',
-        'password' => 'required'
-    ]);
+    public function login(Request $request)
+    {
+        $request->validate([
+            'studentid' => 'required',
+            'password' => 'required'
+        ]);
 
-    $user = User::where('email', $request->email)->first();
+        $user = User::where('studentid', $request->studentid)->first();
 
-    if ($user && $user->password === md5($request->password)) {
-        Auth::login($user);
+        if ($user && $user->password === md5($request->password)) {
+            Auth::login($user);
 
-        $request->session()->regenerate(); // ⚠️ nên có
+            $request->session()->regenerate();
 
-        return redirect('/');
+            return redirect('/');
+        }
+
+        return back()->withErrors([
+            'studentid' => 'Sai mã sinh viên hoặc mật khẩu'
+        ]);
     }
-
-    return back()->withErrors([
-        'email' => 'Sai email hoặc mật khẩu'
-    ]);
-}
 
     public function logout(Request $request)
     {

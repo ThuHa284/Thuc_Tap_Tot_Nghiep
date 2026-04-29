@@ -1,8 +1,9 @@
 <?php
 
-namespace Modules\DiemDanh\app\Models;
+namespace Modules\DiemDanh\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\DiemDanh\Models\Attendance;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
@@ -35,5 +36,12 @@ class Category extends Model
      *
      * @var array
      */
-    protected $fillable = ['category_name'];
+    protected $fillable = ['category_name', 'ctxh_days'];
+    /**
+     * Get the attendances for the category.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'cid', 'cid');
+    }
 }
