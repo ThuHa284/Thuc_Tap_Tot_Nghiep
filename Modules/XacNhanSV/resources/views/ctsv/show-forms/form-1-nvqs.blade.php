@@ -135,8 +135,46 @@
 
     </div>
 
-    {{-- Phần phụ: minh chứng + hình thức nhận --}}
+    {{-- Phần phụ: hình thức nhận + ngày lấy --}}
     <div class="card mt-3 p-4 shadow-sm">
+
+        {{-- Thông báo ngày lấy giấy khi đã duyệt --}}
+        @if($st === 1 && isset($ngayLayGiay) && $ngayLayGiay)
+            <div class="alert alert-success d-flex align-items-center gap-3 mb-3">
+                <span style="font-size:32px">📅</span>
+                <div>
+                    <div class="fw-bold">Đơn đã được duyệt! Vui lòng đến lấy giấy tờ.</div>
+                    <div class="small mt-1">
+                        Từ ngày: <strong>{{ $ngayLayGiay->format('d/m/Y') }}</strong>
+                        &nbsp;—&nbsp;
+                        Hết hạn lấy: <strong class="text-danger">{{ $ngayHetHan->format('d/m/Y') }}</strong>
+                        (trong vòng 3 ngày kể từ ngày duyệt)
+                    </div>
+                    <div class="small text-muted mt-1">
+                        Hình thức nhận:
+                        @switch($submission->get_at)
+                            @case('truc_tiep') 🏢 Nhận trực tiếp tại phòng CTSV @break
+                            @case('email')     📧 Nhận qua Email @break
+                            @case('buu_dien')  📮 Nhận qua Bưu điện @break
+                        @endswitch
+                    </div>
+                </div>
+            </div>
+        @elseif($st === 2)
+            <div class="alert alert-danger mb-3">
+                <i class="bi bi-x-circle-fill me-2"></i>
+                <strong>Đơn bị từ chối.</strong>
+                @if($submission->note)
+                    <br><small><strong>Lý do:</strong> {{ $submission->note }}</small>
+                @endif
+            </div>
+        @elseif($st === 0)
+            <div class="alert alert-warning mb-3">
+                <i class="bi bi-hourglass-split me-2"></i>
+                Đơn đang chờ admin xét duyệt. Vui lòng chờ thông báo.
+            </div>
+        @endif
+
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="text-muted small d-block">Phương thức nhận hồ sơ</label>
@@ -153,41 +191,13 @@
                 <label class="text-muted small d-block">Ngày nộp</label>
                 <span>{{ $submission->created_at ? $submission->created_at->format('H:i — d/m/Y') : '—' }}</span>
             </div>
-            @if($submission->note)
+            @if($submission->note && $st !== 2)
             <div class="col-12">
                 <label class="text-muted small d-block">Ghi chú</label>
                 <span>{{ $submission->note }}</span>
             </div>
             @endif
         </div>
-
-        {{-- File đính kèm --}}
-        @if($submission->fileDetails->isNotEmpty())
-        <hr>
-        <div class="fw-semibold mb-2">📎 File đính kèm</div>
-        <div class="d-flex flex-wrap gap-3">
-            @foreach($submission->fileDetails as $file)
-                @php
-                    $ext = strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION));
-                    $url = asset('storage/'.$file->path);
-                @endphp
-                @if(in_array($ext, ['jpg','jpeg','png']))
-                    <a href="{{ $url }}" target="_blank">
-                        <img src="{{ $url }}" class="img-thumbnail shadow-sm"
-                             style="max-width:150px;max-height:150px;object-fit:cover">
-                    </a>
-                @elseif($ext=='pdf')
-                    <a href="{{ $url }}" target="_blank" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-file-earmark-pdf"></i> {{ $file->original_name }}
-                    </a>
-                @else
-                    <a href="{{ $url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-file-earmark"></i> {{ $file->original_name }}
-                    </a>
-                @endif
-            @endforeach
-        </div>
-        @endif
     </div>
 
     {{-- Nút hành động --}}

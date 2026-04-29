@@ -93,7 +93,7 @@
 
     @if($submission->fileDetails->isNotEmpty())
     <div class="card shadow-sm mb-3">
-        <div class="card-header bg-white fw-bold">📎 File đính kèm</div>
+        <div class="card-header bg-white fw-bold">📎 File minh chứng</div>
         <div class="card-body">
             <div class="d-flex flex-wrap gap-3">
                 @foreach($submission->fileDetails as $file)
@@ -102,17 +102,22 @@
                         $url = asset('storage/'.$file->path);
                     @endphp
                     @if(in_array($ext, ['jpg','jpeg','png']))
-                        <a href="{{ $url }}" target="_blank">
+                        <a href="{{ $url }}" download="{{ $file->original_name }}" title="Bấm để tải về">
                             <img src="{{ $url }}" class="img-thumbnail shadow-sm"
-                                 style="max-width:150px;max-height:150px;object-fit:cover">
+                                 style="max-width:150px;max-height:150px;object-fit:cover;cursor:pointer">
+                            <div class="text-center small mt-1 text-muted">
+                                <i class="bi bi-download"></i> Tải về
+                            </div>
                         </a>
                     @elseif($ext == 'pdf')
-                        <a href="{{ $url }}" target="_blank" class="btn btn-outline-danger btn-sm">
+                        <a href="{{ $url }}" download="{{ $file->original_name }}" class="btn btn-danger btn-sm">
                             <i class="bi bi-file-earmark-pdf"></i> {{ $file->original_name }}
+                            <i class="bi bi-download ms-1"></i>
                         </a>
                     @else
-                        <a href="{{ $url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <a href="{{ $url }}" download="{{ $file->original_name }}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-file-earmark"></i> {{ $file->original_name }}
+                            <i class="bi bi-download ms-1"></i>
                         </a>
                     @endif
                 @endforeach

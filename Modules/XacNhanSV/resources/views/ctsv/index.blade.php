@@ -25,7 +25,8 @@
                 &nbsp;|&nbsp; Khoa: <strong>{{ auth()->user()->facultyid ?? '—' }}</strong>
             </div>
         </div>
-        @if(auth()->user()->su == -1 || auth()->user()->type === null)
+        {{-- su = 1 là Admin theo tài liệu đặc tả --}}
+        @if((int) auth()->user()->su === 1)
         <a href="{{ route('xacnhansv.ctsv.admin.dashboard') }}" class="btn btn-warning btn-sm rounded-pill">
             🔧 Admin CTSV
         </a>

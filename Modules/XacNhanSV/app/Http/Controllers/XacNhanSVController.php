@@ -5,19 +5,51 @@ namespace Modules\XacNhanSV\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\XacNhanSV\Models\EtpForm;
 use Modules\XacNhanSV\Models\EtpFormStudent;
-use Modules\XacNhanSV\Models\EtpFormStudentDetail;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class XacNhanSVController extends Controller
 {
+    // ✅ Helper kiểm tra quyền Admin
+    private function isAdmin(): bool
+    {
+        return auth()->user()->su == 1;
+    }
+
+    // ✅ Helper kiểm tra quyền Sinh viên hoặc Hỗ trợ
+    private function isStudentOrSupport(): bool
+    {
+        return in_array(auth()->user()->su, [0, -1]);
+    }
+
     public function index()
     {
-        $forms = EtpForm::withCount('submissions')->get();
-        return view('xacnhansv::ctsv.index', compact('forms'));
+        $user = auth()->user();
+
+        if ($this->isAdmin()) {
+        $stats = [
+            'pending'  => EtpFormStudent::where('status', EtpFormStudent::STATUS_PENDING)->count(),
+            'approved' => EtpFormStudent::where('status', EtpFormStudent::STATUS_APPROVED)->count(),
+            'rejected' => EtpFormStudent::where('status', EtpFormStudent::STATUS_REJECTED)->count(),
+            'total'    => EtpFormStudent::count(),
+        ];
+        $recent = EtpFormStudent::with(['form', 'user'])->latest()->limit(10)->get();
+
+        return view('xacnhansv::ctsv.admin.dashboard', compact('stats', 'recent'));
+    }
+
+    $forms = EtpForm::withCount('submissions')->get();
+    return view('xacnhansv::ctsv.index', compact('forms'));
     }
 
     public function showForm(int $formid)
     {
+        // ❌ Admin không nộp đơn
+        if ($this->isAdmin()) {
+            return redirect()->route('xacnhansv.ctsv.index')
+                ->with('error', 'Admin không thể nộp đơn.');
+        }
+
         $form = EtpForm::with('details')->findOrFail($formid);
         $user = auth()->user();
 
@@ -35,6 +67,12 @@ class XacNhanSVController extends Controller
 
     public function store(Request $request, int $formid)
     {
+        // ❌ Admin không nộp đơn
+        if ($this->isAdmin()) {
+            return redirect()->route('xacnhansv.ctsv.index')
+                ->with('error', 'Admin không thể nộp đơn.');
+        }
+
         $form = EtpForm::with('details')->findOrFail($formid);
 
         $rules = [
@@ -43,48 +81,30 @@ class XacNhanSVController extends Controller
             'note'             => 'nullable|string|max:1000',
             'get_at'           => 'nullable|string|max:10',
             'ReceivingAddress' => 'nullable|string|max:300',
-            'attachments.*'    => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
-
-        foreach ($form->details as $detail) {
-            $rules['field_' . $detail->fdetailid] = 'nullable|string|max:500';
-        }
 
         $request->validate($rules);
 
-        $dynamicData = [];
-        foreach ($form->details as $detail) {
-            $key = 'field_' . $detail->fdetailid;
-            $dynamicData[$detail->label] = $request->input($key, '');
+        $excludeKeys = ['_token', 'date1', 'date2', 'note', 'get_at', 'ReceivingAddress'];
+        $formData = [];
+        foreach ($request->except($excludeKeys) as $key => $value) {
+            $formData[$key] = $value;
         }
 
         $user = auth()->user();
 
-        $submission = EtpFormStudent::create([
+        EtpFormStudent::create([
             'uid'              => $user->uid,
             'studentid'        => $user->studentid,
             'formid'           => $formid,
             'date1'            => $request->date1,
             'date2'            => $request->date2,
             'note'             => $request->note,
-            'data'             => $dynamicData,
+            'data'             => $formData,
             'status'           => EtpFormStudent::STATUS_PENDING,
             'get_at'           => $request->get_at ?? 'truc_tiep',
             'ReceivingAddress' => $request->ReceivingAddress ?? 'Phòng CTSV',
         ]);
-
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store("ctsv/{$submission->id}", 'public');
-                $submission->fileDetails()->create([
-                    'filename'      => $file->hashName(),
-                    'path'          => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime_type'     => $file->getMimeType(),
-                    'size'          => $file->getSize(),
-                ]);
-            }
-        }
 
         return redirect()
             ->route('xacnhansv.ctsv.my-requests')
@@ -94,6 +114,16 @@ class XacNhanSVController extends Controller
     public function myRequests()
     {
         $user = auth()->user();
+
+        if ($this->isAdmin()) {
+            // Admin xem TẤT CẢ đơn của mọi sinh viên
+            $submissions = EtpFormStudent::with('form')
+                ->latest()
+                ->paginate(10);
+            return view('xacnhansv::admin.all-requests', compact('submissions'));
+        }
+
+        // Sinh viên / Hỗ trợ chỉ xem đơn của chính mình
         $submissions = EtpFormStudent::with('form')
             ->where('uid', $user->uid)
             ->latest()
@@ -101,17 +131,28 @@ class XacNhanSVController extends Controller
         return view('xacnhansv::ctsv.my-requests', compact('submissions'));
     }
 
-    // Xem chi tiết — hiện đúng tờ giấy theo formid
     public function show(int $id)
     {
-        /** @var SavsoftUser $user */
         $user = auth()->user();
 
-        $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
-            ->where('uid', $user->uid)
-            ->findOrFail($id);
+        if ($this->isAdmin()) {
+            // Admin xem được đơn của bất kỳ sinh viên nào
+            $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
+                ->findOrFail($id);
+        } else {
+            // Sinh viên / Hỗ trợ chỉ xem đơn của chính mình
+            $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
+                ->where('uid', $user->uid)
+                ->findOrFail($id);
+        }
 
-        // Load template tờ giấy thật theo formid
+        $ngayLayGiay = null;
+        $ngayHetHan  = null;
+        if ((int)$submission->status === EtpFormStudent::STATUS_APPROVED && $submission->updated_at) {
+            $ngayLayGiay = Carbon::parse($submission->updated_at);
+            $ngayHetHan  = Carbon::parse($submission->updated_at)->addDays(3);
+        }
+
         $templateMap = [
             1 => 'xacnhansv::ctsv.show-forms.form-1-nvqs',
             2 => 'xacnhansv::ctsv.show-forms.form-2-xac-nhan-khac',
@@ -121,7 +162,32 @@ class XacNhanSVController extends Controller
         ];
 
         $template = $templateMap[$submission->formid] ?? 'xacnhansv::ctsv.show';
-        return view($template, compact('submission'));
+        return view($template, compact('submission', 'ngayLayGiay', 'ngayHetHan'));
     }
-    
+
+    // ✅ Hàm duyệt đơn - CHỈ Admin mới dùng được
+    public function approve(int $id)
+    {
+        if (!$this->isAdmin()) {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $submission = EtpFormStudent::findOrFail($id);
+        $submission->update(['status' => EtpFormStudent::STATUS_APPROVED]);
+
+        return redirect()->back()->with('success', 'Đã duyệt đơn thành công.');
+    }
+
+    // ✅ Hàm từ chối đơn - CHỈ Admin mới dùng được
+    public function reject(int $id)
+    {
+        if (!$this->isAdmin()) {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $submission = EtpFormStudent::findOrFail($id);
+        $submission->update(['status' => EtpFormStudent::STATUS_REJECTED]);
+
+        return redirect()->back()->with('success', 'Đã từ chối đơn.');
+    }
 }

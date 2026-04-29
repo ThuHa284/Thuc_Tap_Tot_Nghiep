@@ -126,10 +126,6 @@
 
     <div class="card mt-3 p-4">
         <div class="mb-3">
-            <label class="fw-semibold">📎 Thêm các minh chứng</label>
-            <input type="file" name="attachments[]" class="form-control mt-1" multiple accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-        <div class="mb-3">
             <label class="fw-semibold">Phương thức nhận hồ sơ:</label>
             <div class="mt-1">
                 <label class="me-3"><input type="radio" name="get_at" value="truc_tiep" checked> Phòng CTSV</label>

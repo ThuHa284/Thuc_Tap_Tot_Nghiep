@@ -18,7 +18,7 @@
         </div>
     @endif
 
-    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST">
         @csrf
 
     <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
@@ -137,11 +137,8 @@
         </div>
     </div>
 
+    {{-- Phần phụ: không còn upload file --}}
     <div class="card mt-3 p-4">
-        <div class="mb-3">
-            <label class="fw-semibold">📎 Thêm các minh chứng</label>
-            <input type="file" name="attachments[]" class="form-control mt-1" multiple accept=".pdf,.jpg,.jpeg,.png">
-        </div>
         <div class="mb-3">
             <label class="fw-semibold">Phương thức nhận hồ sơ:</label>
             <div class="mt-1">
