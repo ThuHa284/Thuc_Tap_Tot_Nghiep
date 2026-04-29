@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\XacNhanSV\Http\Controllers\XacNhanSVController;
 use Modules\XacNhanSV\Http\Controllers\CtsvAdminController;
 
-// Route index mặc định của Team 1 (giữ nguyên)
 Route::middleware(['auth'])->group(function () {
 
     // ===== SINH VIÊN =====
@@ -33,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/forms/{formid}',          [CtsvAdminController::class, 'updateForm'])->name('forms.update');
         Route::delete('/forms/{formid}',       [CtsvAdminController::class, 'destroyForm'])->name('forms.destroy');
         Route::get('/requests',                [CtsvAdminController::class, 'requests'])->name('requests');
+        Route::get('/requests/print-bulk',     [CtsvAdminController::class, 'printBulk'])->name('requests.print-bulk'); // ← THÊM DÒNG NÀY
         Route::get('/requests/{id}',           [CtsvAdminController::class, 'showRequest'])->name('requests.show');
         Route::post('/requests/{id}/approve',  [CtsvAdminController::class, 'approveRequest'])->name('requests.approve');
         Route::post('/requests/{id}/reject',   [CtsvAdminController::class, 'rejectRequest'])->name('requests.reject');
