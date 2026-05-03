@@ -24,25 +24,25 @@
                     class="d-inline-block align-top me-1"> <span class="text-white fw-bold">CTSV</span>
             </a>
 
-          <div class="ms-auto d-flex align-items-center">
+            <div class="ms-auto d-flex align-items-center">
 
-    @auth
-        <div class="text-white me-3">
-            Chào, <strong>{{ auth()->user()->full_name }}</strong>
-        </div>
-        <form action="{{ route('logout') }}" method="POST" class="m-0">
-            @csrf
-            <button class="btn btn-sm btn-outline-light">Đăng xuất</button>
-        </form>
-    @endauth
+                @auth
+                <div class="text-white me-3">
+                    Chào, <strong>{{ auth()->user()->full_name }}</strong>
+                </div>
+                <form action="{{ route('logout') }}" method="POST" class="m-0">
+                    @csrf
+                    <button class="btn btn-sm btn-outline-light">Đăng xuất</button>
+                </form>
+                @endauth
 
-    @guest
-        <a href="{{ route('login') }}" class="btn btn-sm btn-light">
-            Đăng nhập
-        </a>
-    @endguest
+                @guest
+                <a href="{{ route('login') }}" class="btn btn-sm btn-light">
+                    Đăng nhập
+                </a>
+                @endguest
 
-</div>
+            </div>
         </div>
     </nav>
 
