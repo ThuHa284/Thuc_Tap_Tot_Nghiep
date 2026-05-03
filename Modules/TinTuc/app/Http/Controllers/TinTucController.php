@@ -9,16 +9,22 @@ use Modules\TinTuc\Models\LoaiTin as ModelsLoaiTin;
 
 class TinTucController extends Controller
 {
+    private function checkAdmin()
+    {
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = ModelsTinTuc::with('loaitin')->orderBy('id','desc');
+        $query = ModelsTinTuc::with('loaitin')->orderBy('created_at', 'desc');
 
         if($request->has('search') && $request->search !=''){
             $query->where('title','like','%'.$request->search.'%');
-
         }
         $danhSachTin = $query->get();
         return view('tintuc::index', compact('danhSachTin'));
@@ -29,6 +35,7 @@ class TinTucController extends Controller
      */
     public function create()
     {
+        $this->checkAdmin();
         $loaiTins = ModelsLoaiTin::all();
         return view('tintuc::create', compact('loaiTins'));
     }
@@ -37,6 +44,7 @@ class TinTucController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request) {
+        $this->checkAdmin();
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -72,6 +80,7 @@ class TinTucController extends Controller
      */
     public function edit($id)
     {
+        $this->checkAdmin();
         $tinTuc = ModelsTinTuc::findOrFail($id);
         $loaiTins = ModelsLoaiTin::all();
         return view('tintuc::edit', compact('tinTuc', 'loaiTins'));
@@ -81,6 +90,7 @@ class TinTucController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id) {
+        $this->checkAdmin();
     // 1. Validate dữ liệu (Thêm dòng validate ảnh cho bảo mật)
     $request->validate([
         'title' => 'required|string|max:255',
@@ -118,6 +128,7 @@ class TinTucController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy($id) {
+        $this->checkAdmin();
         $tinTuc = ModelsTinTuc::findOrFail($id);
         $tinTuc->delete();
         return redirect()->route('tintuc.index')->with('success','Xóa tin tức thành công');
