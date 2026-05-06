@@ -21,7 +21,7 @@
 <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 <script type="text/javascript">
     new QRCode(document.getElementById("qrcode"), {
-        text: "{{ $qrData }}",
+        text: @json($qrData),
         width: 256,
         height: 256,
         colorDark : "#000000",
@@ -30,3 +30,5 @@
     });
 </script>
 @endsection
+
+

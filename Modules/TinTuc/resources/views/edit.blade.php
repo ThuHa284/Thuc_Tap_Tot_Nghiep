@@ -73,6 +73,100 @@
                                        value="{{ old('date1', $tinTuc->date1 ? \Carbon\Carbon::parse($tinTuc->date1)->format('Y-m-d') : '') }}">
                                 <label for="date1"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày diễn ra</label>
                             </div>
+
+                            {{-- Chi hien thi khi co query param type=khai_bao HOAC tin tuc da co khai bao tu truoc --}}
+                            @if(request('type') === 'khai_bao' || $tinTuc->is_khai_bao_noi_tru)
+                            <div class="card border-0 bg-light rounded-3 p-3 mt-3" id="khai_bao_section">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <label class="form-label fw-bold mb-0">
+                                        <i class="fas fa-door-open me-2 text-muted"></i>Kỳ khai báo nội trú
+                                    </label>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="is_khai_bao_noi_tru" id="is_khai_bao_noi_tru" value="1" {{ old('is_khai_bao_noi_tru', $tinTuc->is_khai_bao_noi_tru) ? 'checked' : '' }}>
+                                        <label class="form-check-label small text-muted" for="is_khai_bao_noi_tru">Bật</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1" for="khai_bao_ky">Chọn kỳ</label>
+                                    <select name="khai_bao_ky" id="khai_bao_ky" class="form-select rounded-3 @error('khai_bao_ky') is-invalid @enderror">
+                                        <option value="">-- Chọn kỳ --</option>
+                                        <option value="1" {{ old('khai_bao_ky', $tinTuc->khai_bao_ky) == '1' ? 'selected' : '' }}>Kỳ 1</option>
+                                        <option value="2" {{ old('khai_bao_ky', $tinTuc->khai_bao_ky) == '2' ? 'selected' : '' }}>Kỳ 2</option>
+                                    </select>
+                                    @error('khai_bao_ky')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted mb-1" for="khai_bao_start_at">Bắt đầu</label>
+                                        <input type="datetime-local" name="khai_bao_start_at" id="khai_bao_start_at" class="form-control rounded-3 @error('khai_bao_start_at') is-invalid @enderror" value="{{ old('khai_bao_start_at', $tinTuc->khai_bao_start_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_start_at)->format('Y-m-d\TH:i') : '') }}">
+                                        @error('khai_bao_start_at')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted mb-1" for="khai_bao_end_at">Kết thúc</label>
+                                        <input type="datetime-local" name="khai_bao_end_at" id="khai_bao_end_at" class="form-control rounded-3 @error('khai_bao_end_at') is-invalid @enderror" value="{{ old('khai_bao_end_at', $tinTuc->khai_bao_end_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_end_at)->format('Y-m-d\TH:i') : '') }}">
+                                        @error('khai_bao_end_at')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-2 d-block">Bài viết sẽ hiện nút khai báo tại đây khi nằm trong khung thời gian này.</small>
+                            </div>
+                            @endif
+
+                            <div class="card border-0 bg-light rounded-3 p-3 mt-3">
+                                <label class="form-label fw-bold mb-3">
+                                    <i class="fas fa-paperclip me-2 text-muted"></i>Tệp đính kèm
+                                </label>
+                                @if(!empty($tinTuc->attachment_path))
+                                    <div class="alert alert-info py-2 px-3 mb-3">
+                                        <i class="fas fa-file-alt me-1"></i>
+                                        {{ $tinTuc->attachment_display_label ? $tinTuc->attachment_display_label . ' - ' : '' }}Tệp hiện tại:
+                                        <a href="{{ asset($tinTuc->attachment_path) }}" target="_blank" class="fw-semibold text-decoration-none">Xem chi tiết</a>
+                                    </div>
+                                @endif
+                                <input type="text" class="form-control rounded-3 mb-2 @error('attachment_label') is-invalid @enderror" name="attachment_label" value="{{ old('attachment_label', $tinTuc->attachment_label) }}" placeholder="Nhập chữ hiển thị trước tệp đính kèm">
+                                <input type="file" class="form-control rounded-3 @error('attachment') is-invalid @enderror" name="attachment" accept=".pdf,.xls,.xlsx,.csv,.doc,.docx">
+                                <small class="text-muted mt-2 d-block">Chọn file mới để thay thế tệp đính kèm hiện tại</small>
+                                <small class="text-muted d-block">Ví dụ: Quy định, Mẫu đơn, Danh sách</small>
+                                @error('attachment_label')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                @error('attachment')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="card border-0 bg-light rounded-3 p-3 mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <label class="form-label fw-bold mb-0">
+                                        <i class="fas fa-layer-group me-2 text-muted"></i>Tệp đính kèm bổ sung
+                                    </label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" onclick="addExtraAttachment()">Thêm tệp</button>
+                                </div>
+                                <div id="extraAttachmentsContainer" class="d-grid gap-3">
+                                    @foreach(old('extra_attachments', $tinTuc->attachments ?? []) as $index => $extraAttachment)
+                                        <div class="border rounded-3 bg-white p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong class="text-dark small">Tệp bổ sung</strong>
+                                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="this.closest('.border').remove()">Xóa</button>
+                                            </div>
+                                            <input type="text" name="extra_attachments[{{ $index }}][label]" class="form-control rounded-3 mb-2" placeholder="Nhãn hiển thị" value="{{ $extraAttachment['label'] ?? '' }}">
+                                            @if(!empty($extraAttachment['path']))
+                                                <input type="hidden" name="extra_attachments[{{ $index }}][existing_path]" value="{{ $extraAttachment['path'] }}">
+                                                <input type="hidden" name="extra_attachments[{{ $index }}][existing_name]" value="{{ $extraAttachment['name'] ?? '' }}">
+                                                <div class="alert alert-info py-2 px-3 mb-2">
+                                                    <a href="{{ asset($extraAttachment['path']) }}" target="_blank" class="fw-semibold text-decoration-none">{{ $extraAttachment['label'] ?? 'Tệp bổ sung' }} - Xem chi tiết</a>
+                                                </div>
+                                            @endif
+                                            <input type="file" name="extra_attachments[{{ $index }}][file]" class="form-control rounded-3" accept=".pdf,.xls,.xlsx,.csv,.doc,.docx">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="col-md-4">
@@ -87,7 +181,7 @@
                                             <p class="text-success small mt-2 mb-0"><i class="fas fa-check-circle me-1"></i>Ảnh hiện tại</p>
                                         </div>
                                     @else
-                                        <div class="bg-white rounded-3 p-4 border border-2 border-dashed">
+                                        <div class="bg-white rounded-3 p-4 border-2 border-dashed">
                                             <i class="fas fa-cloud-upload-alt fa-4x text-muted" id="uploadIcon"></i>
                                             <p class="text-muted small mt-2 mb-0">Chọn ảnh mới</p>
                                         </div>
@@ -102,14 +196,17 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="form-floating mt-4">
-                        <textarea class="form-control rounded-3 border-0 shadow-sm @error('content') is-invalid @enderror" 
-                                  name="content" id="content" style="height: 200px" required>{{ old('content', $tinTuc->content) }}</textarea>
-                        <label for="content"><i class="fas fa-file-alt me-2 text-muted"></i>Nội dung chi tiết</label>
-                        @error('content')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+
+                    <div class="card border-0 shadow-sm rounded-3 mt-4">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-align-left me-2 text-primary"></i>Nội dung bài viết</h5>
+                        </div>
+                        <div class="card-body p-3 p-md-4">
+                            <textarea name="content" id="content" class="form-control rounded-3 @error('content') is-invalid @enderror" rows="10" placeholder="Nhập nội dung bài viết...">{{ old('content', $tinTuc->content) }}</textarea>
+                            @error('content')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                     
                     <hr class="my-4">
@@ -159,5 +256,71 @@ function previewImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+let extraAttachmentIndex = document.querySelectorAll('#extraAttachmentsContainer .border').length;
+
+function addExtraAttachment(existing = {}) {
+    const container = document.getElementById('extraAttachmentsContainer');
+    const index = extraAttachmentIndex++;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border rounded-3 bg-white p-3';
+    wrapper.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong class="text-dark small">Tệp bổ sung</strong>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="this.closest('.border').remove()">Xóa</button>
+        </div>
+        <input type="text" name="extra_attachments[${index}][label]" class="form-control rounded-3 mb-2" placeholder="Nhãn hiển thị" value="${existing.label || ''}">
+        ${existing.path ? `<input type="hidden" name="extra_attachments[${index}][existing_path]" value="${existing.path}"><input type="hidden" name="extra_attachments[${index}][existing_name]" value="${existing.name || ''}"><div class="alert alert-info py-2 px-3 mb-2"><a href="/${existing.path}" target="_blank" class="fw-semibold text-decoration-none">${existing.label || 'Tệp hiện tại'} - Xem chi tiết</a></div>` : ''}
+        <input type="file" name="extra_attachments[${index}][file]" class="form-control rounded-3" accept=".pdf,.xls,.xlsx,.csv,.doc,.docx">
+    `;
+    container.appendChild(wrapper);
+}
 </script>
+
+<script>
+const usedDeclarationSemesters = JSON.parse(document.getElementById('usedDeclarationSemestersData')?.textContent || '{}');
+
+function getYearFromDeclarationStart() {
+    const value = document.getElementById('khai_bao_start_at')?.value;
+    return value ? value.substring(0, 4) : null;
+}
+
+function syncSemesterOptions() {
+    const year = getYearFromDeclarationStart();
+    const semesterSelect = document.getElementById('khai_bao_ky');
+    if (!semesterSelect) return;
+
+    Array.from(semesterSelect.options).forEach(option => {
+        if (!option.value) {
+            option.disabled = false;
+            return;
+        }
+
+        const usedSemesters = year ? (usedDeclarationSemesters[year] || []) : [];
+        const currentValue = semesterSelect.value;
+        const isCurrentSelection = currentValue && currentValue === option.value;
+        option.disabled = usedSemesters.includes(Number(option.value)) && !isCurrentSelection;
+    });
+}
+
+// Neu co query param type=khai_bao, tu dong bat checkbox va set required
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('type') === 'khai_bao') {
+        const checkbox = document.getElementById('is_khai_bao_noi_tru');
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+        const kySelect = document.getElementById('khai_bao_ky');
+        if (kySelect) {
+            kySelect.setAttribute('required', 'required');
+        }
+    }
+    syncSemesterOptions();
+});
+
+document.getElementById('khai_bao_start_at')?.addEventListener('change', syncSemesterOptions);
+</script>
+
+<script type="application/json" id="usedDeclarationSemestersData"><?php echo json_encode($usedDeclarationSemesters ?? []); ?></script>
 @endsection

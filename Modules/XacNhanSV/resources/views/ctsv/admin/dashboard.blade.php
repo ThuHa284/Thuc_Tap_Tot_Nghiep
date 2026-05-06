@@ -40,10 +40,11 @@
                 <div class="text-muted small mt-1">❌ Từ chối</div>
             </div>
         </div>
+        {{-- ✅ Thêm card Đã in --}}
         <div class="col-md-3">
             <div class="card border-0 shadow-sm text-center py-4">
-                <div class="fs-1 fw-bold text-primary">{{ $stats['total'] }}</div>
-                <div class="text-muted small mt-1">📋 Tổng đơn</div>
+                <div class="fs-1 fw-bold text-info">{{ $stats['printed'] }}</div>
+                <div class="text-muted small mt-1">🖨️ Đã in</div>
             </div>
         </div>
     </div>
@@ -78,11 +79,12 @@
                         </td>
                         <td class="small">{{ $s->form->name ?? '—' }}</td>
                         <td class="small text-muted">
-                            {{ $s->created_at ? $s->created_at->format('d/m/Y H:i') : '—' }}
+                            {{ $s->created_at ? $s->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : '—' }}
                         </td>
                         <td>
-                            <span class="badge bg-{{ match($st){ 0=>'warning text-dark', 1=>'success', 2=>'danger', default=>'secondary' } }}">
-                                {{ match($st){ 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', default=>'?' } }}
+                            {{-- ✅ Thêm case 3: Đã in --}}
+                            <span class="badge bg-{{ match($st){ 0=>'warning text-dark', 1=>'success', 2=>'danger', 3=>'info', default=>'secondary' } }}">
+                                {{ match($st){ 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', 3=>'🖨️ Đã in', default=>'?' } }}
                             </span>
                         </td>
                         <td>

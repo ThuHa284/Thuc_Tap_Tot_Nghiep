@@ -4,13 +4,17 @@ namespace Modules\TinTuc\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Modules\TinTuc\Models\TinTuc;
 use Modules\TinTuc\Models\KhaiBaoNoiTru;
 
 class KhaiBaoNoiTruController extends Controller
 {
     private function checkAdmin()
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
+        $user = Auth::user();
+
+        if (!Auth::check() || !$user || !method_exists($user, 'isAdmin') || !$user->isAdmin()) {
             abort(403, 'Bạn không có quyền thực hiện thao tác này.');
         }
     }
@@ -20,10 +24,31 @@ class KhaiBaoNoiTruController extends Controller
      */
     public function khaiBaoSinhVien()
     {
-        $user = auth()->user();
+        $activeDeclaration = TinTuc::currentKhaiBaoNoiTru();
+
+        if (!$activeDeclaration) {
+            return redirect()->route('tintuc.index')->with('error', 'Hiện chưa đến thời gian khai báo nội trú.');
+        }
+
+        $user = Auth::user();
         // Lấy khai báo của sinh viên hiện tại (nếu có)
         $khaiBao = KhaiBaoNoiTru::where('mssv', $user->studentid)->first();
-        return view('tintuc::khai_bao_noi_tru.sinh_vien', compact('khaiBao'));
+        return view('tintuc::khai_bao_noi_tru.sinh_vien', compact('khaiBao', 'activeDeclaration'));
+    }
+
+    public function kichHoatTuTin(TinTuc $tinTuc)
+    {
+        if (
+            !$tinTuc->is_khai_bao_noi_tru ||
+            !$tinTuc->khai_bao_start_at ||
+            !$tinTuc->khai_bao_end_at ||
+            now()->isBefore($tinTuc->khai_bao_start_at) ||
+            now()->isAfter($tinTuc->khai_bao_end_at)
+        ) {
+            return redirect()->route('tintuc.show', $tinTuc->id)->with('error', 'Kỳ khai báo này chưa mở hoặc đã hết hạn.');
+        }
+
+        return redirect()->route('khai_bao_noi_tru.sinh_vien');
     }
 
     /**
@@ -31,14 +56,19 @@ class KhaiBaoNoiTruController extends Controller
      */
     public function luuKhaiBao(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $request->validate([
             'dia_chi_hien_tai' => 'required|string',
-            'ten_chu_tro' => 'required|string|max:255',
-            'so_dien_thoai_chu_tro' => 'required|string|max:20',
-            'ngay_vao_tro' => 'required|date',
-            'so_dien_thoai_sv' => 'required|string|max:20',
+            'ten_chu_tro' => ['required', 'string', 'max:255', 'regex:/^[a-zA-ZÀ-ỹ\s]+$/'],
+            'so_dien_thoai_chu_tro' => ['required', 'string', 'max:20', 'regex:/^[0-9]{10,11}$/'],
+            'ngay_vao_tro' => 'required|date|before_or_equal:today',
+            'so_dien_thoai_sv' => ['required', 'string', 'max:20', 'regex:/^[0-9]{10,11}$/'],
+        ], [
+            'so_dien_thoai_sv.regex' => 'Số điện thoại sinh viên phải là chữ số, 10-11 số.',
+            'so_dien_thoai_chu_tro.regex' => 'Số điện thoại chủ trọ phải là chữ số, 10-11 số.',
+            'ten_chu_tro.regex' => 'Họ tên chủ trọ chỉ được nhập chữ cái.',
+            'ngay_vao_tro.before_or_equal' => 'Ngày vào trọ không được chọn ngày trong tương lai.',
         ]);
 
         $data = [

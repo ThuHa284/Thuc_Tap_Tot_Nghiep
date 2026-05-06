@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tintuc', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->string('img')->nullable();
-            $table->text('content');
-            $table->integer('status')->default(1);
-            $table->date('date1')->nullable();
+        if (!Schema::hasTable('tintuc')) {
+            Schema::create('tintuc', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->string('img')->nullable();
+                $table->text('content');
+                $table->integer('status')->default(1);
+                $table->date('date1')->nullable();
 
-            $table->unsignedBigInteger('loaitin_id');
-            $table->foreign('loaitin_id')->references('id')->on('loaitin')->onDelete('cascade');
-            
-            $table->timestamps();
-        });
+                $table->unsignedBigInteger('loaitin_id');
+                $table->foreign('loaitin_id')->references('id')->on('loaitin')->onDelete('cascade');
+
+                $table->timestamps();
+            });
+        }
     }
 
     /**

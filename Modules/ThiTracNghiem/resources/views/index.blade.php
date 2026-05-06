@@ -118,7 +118,6 @@
                     </div>
                 </div>
                 <div class="card-body pt-2 text-center">
-                    @if(isset($user) && $user)
                     <h4 class="fw-bold mb-1">{{ $user['name'] ?: 'Sinh viên' }}</h4>
                     <p class="text-muted small mb-4">Mã số: {{ $user['studentid'] ?? 'N/A' }}</p>
 
@@ -142,20 +141,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="mt-4 pt-3 border-top">
-                        <form method="POST" action="{{ route('thitracnghiem.logout') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-danger rounded-pill px-4 btn-sm">
-                                <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
-                            </button>
-                        </form>
-                    </div>
-                    @else
-                    <h4 class="fw-bold mb-4">Khách</h4>
-                    <p class="mb-4">Vui lòng đăng nhập để xem thông tin cá nhân và tham gia thi.</p>
-                    <a href="{{ route('thitracnghiem.login.form') }}" class="btn btn-primary rounded-pill px-4">Đăng nhập</a>
-                    @endif
                 </div>
             </div>
         </div>
@@ -198,18 +183,6 @@
                     </div>
                 </div>
 
-                @if(!isset($user) || !$user)
-                <div class="col-md-6">
-                    <div class="card dashboard-card action-card p-4" onclick="window.location.href='{{ route('thitracnghiem.login.form') }}'">
-                        <div class="action-icon bg-soft-orange">
-                            <i class="bi bi-shield-lock"></i>
-                        </div>
-                        <h5 class="fw-bold">Yêu cầu đăng nhập</h5>
-                        <p class="text-muted small mb-0">Bạn cần đăng nhập để lưu trữ kết quả thi vào hệ thống học tập.</p>
-                        <div class="mt-3 text-warning fw-semibold small">Đăng nhập <i class="bi bi-arrow-right ms-1"></i></div>
-                    </div>
-                </div>
-                @endif
             </div>
 
             <div class="mt-5 p-4 rounded-4 bg-white shadow-sm border">

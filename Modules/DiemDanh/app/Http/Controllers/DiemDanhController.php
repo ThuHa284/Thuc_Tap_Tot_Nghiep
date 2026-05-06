@@ -3,8 +3,10 @@
 namespace Modules\DiemDanh\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Modules\DiemDanh\Models\Attendance;
 use Modules\DiemDanh\Models\Category;
 
@@ -36,7 +38,6 @@ class DiemDanhController extends Controller
             return (int) $user->su;
         }
 
-        // Fallback dữ liệu cũ: gid=0 là admin.
         return ((int) ($user->gid ?? 999) === 0)
             ? self::ROLE_ADMIN
             : self::ROLE_STUDENT;
@@ -47,11 +48,11 @@ class DiemDanhController extends Controller
         $role = $this->resolveRole();
 
         if ($adminOnly && $role !== self::ROLE_ADMIN) {
-            abort(403, 'Bạn không có quyền tạo sự kiện.');
+            abort(403, 'Ban khong co quyen tao su kien.');
         }
 
         if (!$adminOnly && !in_array($role, [self::ROLE_ADMIN, self::ROLE_SUPPORT], true)) {
-            abort(403, 'Bạn không có quyền truy cập vào khu vực này.');
+            abort(403, 'Ban khong co quyen truy cap vao khu vuc nay.');
         }
 
         return $role;
@@ -60,7 +61,7 @@ class DiemDanhController extends Controller
     private function ensureStudent(): void
     {
         if ($this->resolveRole() !== self::ROLE_STUDENT) {
-            abort(403, 'Chỉ sinh viên mới truy cập được khu vực này.');
+            abort(403, 'Chi sinh vien moi truy cap duoc khu vuc nay.');
         }
     }
 
@@ -68,8 +69,9 @@ class DiemDanhController extends Controller
     {
         $role = $this->ensureStaff();
         $canCreateEvent = ($role === self::ROLE_ADMIN);
-        $recentEvents = Category::orderBy('cid', 'desc')->take(10)->get();
         $canUseQrTools = in_array($role, [self::ROLE_ADMIN, self::ROLE_SUPPORT], true);
+
+        $recentEvents = Category::orderBy('cid', 'desc')->take(10)->get();
 
         return view('diemdanh::create_event', compact('recentEvents', 'canCreateEvent', 'canUseQrTools'));
     }
@@ -84,7 +86,7 @@ class DiemDanhController extends Controller
             'diemdanh_ctxh_days' => $category->ctxh_days,
         ]);
 
-        return redirect()->route('diemdanh.create_event')->with('success', 'Đã chọn sự kiện: ' . $category->category_name);
+        return redirect()->route('diemdanh.create_event')->with('success', 'Da chon su kien: ' . $category->category_name);
     }
 
     public function storeEvent(Request $request)
@@ -110,7 +112,7 @@ class DiemDanhController extends Controller
             'diemdanh_ctxh_days' => $category->ctxh_days,
         ]);
 
-        return redirect()->route('diemdanh.create_event')->with('success', 'Đã tạo/cập nhật sự kiện thành công.');
+        return redirect()->route('diemdanh.create_event')->with('success', 'Da tao/cap nhat su kien thanh cong.');
     }
 
     public function scanCamera(Request $request)
@@ -118,7 +120,7 @@ class DiemDanhController extends Controller
         $this->ensureStaff();
 
         if (!$request->session()->has('diemdanh_event_name')) {
-            return redirect()->route('diemdanh.create_event')->with('error', 'Vui lòng chọn một sự kiện trước khi quét mã.');
+            return redirect()->route('diemdanh.create_event')->with('error', 'Vui long chon mot su kien truoc khi quet ma.');
         }
 
         $eventName = $request->session()->get('diemdanh_event_name');
@@ -131,13 +133,74 @@ class DiemDanhController extends Controller
         $this->ensureStaff();
 
         if (!$request->session()->has('diemdanh_event_id')) {
-            return redirect()->route('diemdanh.create_event')->with('error', 'Vui lòng chọn một sự kiện trước khi tạo mã QR.');
+            return redirect()->route('diemdanh.create_event')->with('error', 'Vui long chon mot su kien truoc khi xem QR.');
         }
 
         $eventName = $request->session()->get('diemdanh_event_name');
-        $qrData = $request->session()->get('diemdanh_event_id');
+        $eventId = (int) $request->session()->get('diemdanh_event_id');
+        $signedPath = URL::temporarySignedRoute(
+            'diemdanh.student_checkin',
+            now()->addHours(2),
+            ['event' => $eventId],
+            false
+        );
+        $baseUrl = rtrim((string) config('app.url'), '/');
+        $qrData = $baseUrl . $signedPath;
 
-        return view('diemdanh::show_qr', compact('eventName', '$qrData'));
+        return view('diemdanh::show_qr', compact('eventName', 'qrData'));
+    }
+
+    public function studentCheckin(Request $request, Category $event)
+    {
+        $this->ensureStudent();
+
+        if (!$request->hasValidSignature(false)) {
+            return redirect()->route('diemdanh.history')
+                ->with('error', 'Ma QR khong hop le hoac da het han. Vui long quet lai ma moi.');
+        }
+
+        $studentId = $this->resolveStudentId();
+        if ($studentId === '') {
+            return redirect()->route('diemdanh.history')
+                ->with('error', 'Khong tim thay MSSV trong tai khoan. Vui long lien he quan tri.');
+        }
+
+        $user = auth()->user();
+        $studentName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        if ($studentName === '') {
+            $studentName = $user->name ?? ($user->email ?? $studentId);
+        }
+
+        $existingAttendance = Attendance::where('cid', $event->cid)
+            ->where('studentid', $studentId)
+            ->first();
+
+        if ($existingAttendance) {
+            if ((string) $existingAttendance->student_name !== $studentName) {
+                $existingAttendance->student_name = $studentName;
+                $existingAttendance->save();
+            }
+
+            return redirect()->route('diemdanh.history')
+                ->with('info', "Ban da diem danh su kien {$event->category_name} roi.");
+        }
+
+        Attendance::create([
+            'studentid' => $studentId,
+            'student_name' => $studentName,
+            'course_name' => $event->category_name,
+            'cid' => $event->cid,
+            'time1' => Carbon::now(),
+            'info_staff' => 'Sinh vien tu quet QR',
+            'date_class' => Carbon::now()->format('d-m-Y'),
+            'subject' => 'Diem danh su kien',
+            'class_id' => 'EVENT_CTSV',
+            'faculty_id' => 'CTSV',
+            'point' => 0,
+        ]);
+
+        return redirect()->route('diemdanh.history')
+            ->with('success', "Diem danh thanh cong su kien {$event->category_name}.");
     }
 
     public function saveAttendance(Request $request)
@@ -147,84 +210,90 @@ class DiemDanhController extends Controller
         try {
             $qrData = (string) $request->input('qr_code', '');
 
-            $eventName = session('diemdanh_event_name', 'Sự kiện không xác định');
+            $eventName = session('diemdanh_event_name', 'Su kien khong xac dinh');
             $categoryID = session('diemdanh_event_id');
 
             if (!$categoryID) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Phiên làm việc đã hết hạn. Vui lòng tạo lại sự kiện.',
+                    'message' => 'Phien lam viec da het han. Vui long tao lai su kien.',
                 ], 419);
             }
 
-            // 1. Giải mã QR để lấy đúng thông tin sinh viên
             $parsedStudent = $this->parseQrStudent($qrData);
             if (!$parsedStudent) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Mã QR không hợp lệ. Định dạng yêu cầu: MSSV_HOTEN_NGAYSINH',
+                    'message' => 'Ma QR khong hop le. Ho tro: MSSV-Ho_Ten hoac MSSV_HOTEN_NGAYSINH.',
                 ], 400);
             }
 
             $studentId = $parsedStudent['student_id'];
-            $studentName = $parsedStudent['student_name']; // Tên lấy trực tiếp từ QR
+            $studentName = trim((string) ($parsedStudent['student_name'] ?? ''));
+            if ($studentName === '' || strcasecmp($studentName, 'Chua co ten') === 0) {
+                $resolvedName = $this->resolveStudentNameById($studentId);
+                if ($resolvedName !== '') {
+                    $studentName = $resolvedName;
+                }
+            }
+            if ($studentName === '') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Khong lay duoc ten sinh vien tu ma QR. Vui long kiem tra dinh dang ma.',
+                ], 422);
+            }
 
-            // 2. Kiểm tra xem sinh viên này đã điểm danh sự kiện này chưa
             $existingAttendance = Attendance::where('cid', $categoryID)
                 ->where('studentid', $studentId)
                 ->first();
 
             if ($existingAttendance) {
-                // Nếu đã tồn tại, cập nhật lại tên mới nhất từ mã QR (nếu có thay đổi)
-                if ((string) $existingAttendance->student_name !== $studentName) {
+                if ($studentName !== '' && (string) $existingAttendance->student_name !== $studentName) {
                     $existingAttendance->student_name = $studentName;
                     $existingAttendance->save();
                 }
 
                 return response()->json([
                     'status' => 'info',
-                    'student_name' => $studentName, // GỬI VỀ ĐỂ HIỂN THỊ NGAY
-                    'message' => "Sinh viên $studentName đã điểm danh sự kiện này rồi.",
+                    'message' => "Sinh vien {$studentName} da diem danh su kien nay roi.",
+                    'student_name' => $studentName,
                 ]);
             }
 
-            // 3. Lấy tên cán bộ thực hiện điểm danh (Admin/Hỗ trợ)
             $user = auth()->user();
-            $staffName = trim(($user->last_name ?? '') . ' ' . ($user->first_name ?? ''));
+            $staffName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
             if ($staffName === '') {
-                $staffName = $user->name ?? ($user->email ?? 'Cán bộ quản lý');
+                $staffName = $user->name ?? ($user->email ?? 'Can bo quan ly');
             }
 
-            // 4. Lưu mới vào database
             Attendance::create([
-                'studentid'    => $studentId,
-                'student_name' => $studentName, // Lưu tên từ QR
-                'course_name'  => $eventName,
-                'cid'          => $categoryID,
-                'time1'        => now(),
-                'info_staff'   => $staffName,
-                'date_class'   => date('d-m-Y'),
-                'subject'      => 'Điểm danh sự kiện',
-                'class_id'     => 'EVENT_CTSV',
-                'faculty_id'   => 'CTSV',
-                'point'        => 0,
+                'studentid' => $studentId,
+                'student_name' => $studentName,
+                'course_name' => $eventName,
+                'cid' => $categoryID,
+                'time1' => Carbon::now(),
+                'info_staff' => $staffName,
+                'date_class' => Carbon::now()->format('d-m-Y'),
+                'subject' => 'Diem danh su kien',
+                'class_id' => 'EVENT_CTSV',
+                'faculty_id' => 'CTSV',
+                'point' => 0,
             ]);
 
             return response()->json([
-                'status'       => 'success',
-                'student_name' => $studentName, // GỬI VỀ ĐỂ HIỂN THỊ NGAY
-                'message'      => "Đã lưu: $studentName vào sự kiện $eventName",
+                'status' => 'success',
+                'message' => "Da luu: {$studentName} vao su kien $eventName",
+                'student_name' => $studentName,
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Dữ liệu QR không hợp lệ: ' . $e->getMessage(),
+                'message' => 'Du lieu QR khong hop le: ' . $e->getMessage(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Lỗi lưu dữ liệu: ' . $e->getMessage(),
+                'message' => 'Loi luu du lieu: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -255,6 +324,46 @@ class DiemDanhController extends Controller
         $this->ensureStaff();
 
         $attendances = $category->attendances()->orderBy('time1', 'desc')->get();
+        $missingStudentIds = $attendances
+            ->filter(fn ($attendance) => trim((string) $attendance->student_name) === '')
+            ->pluck('studentid')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($missingStudentIds->isNotEmpty()) {
+            $userMap = User::query()
+                ->whereIn('studentid', $missingStudentIds->all())
+                ->get()
+                ->mapWithKeys(function ($user) {
+                    $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                    $name = $fullName !== '' ? $fullName : trim((string) ($user->username ?? ''));
+                    return [strtoupper((string) $user->studentid) => $name];
+                });
+
+            foreach ($attendances as $attendance) {
+                if (trim((string) $attendance->student_name) !== '') {
+                    continue;
+                }
+
+                $lookupId = strtoupper((string) $attendance->studentid);
+                $resolvedName = trim((string) ($userMap[$lookupId] ?? ''));
+                if ($resolvedName === '') {
+                    continue;
+                }
+
+                $attendance->student_name = $resolvedName;
+                $attendance->save();
+            }
+        }
+
+        foreach ($attendances as $attendance) {
+            $name = trim((string) $attendance->student_name);
+            if ($name === '') {
+                $name = $this->resolveStudentNameById((string) $attendance->studentid);
+            }
+            $attendance->display_name = $name;
+        }
 
         session([
             'diemdanh_event_id' => $category->cid,
@@ -274,7 +383,6 @@ class DiemDanhController extends Controller
             return $studentId;
         }
 
-        // Trường hợp tài khoản sinh viên dùng email: dh52200914@student.stu.edu.vn
         $email = (string) ($user->email ?? '');
         if (str_ends_with(strtolower($email), '@student.stu.edu.vn')) {
             return trim((string) strstr($email, '@', true));
@@ -289,34 +397,79 @@ class DiemDanhController extends Controller
         if ($qrData === '') {
             return null;
         }
-
-        // Định dạng mới: MSSV_HOTEN_DD.MM.YYYY (hoặc DD-MM-YYYY / DD/MM/YYYY)
-        // Hỗ trợ Unicode đầy đủ để lấy tên tiếng Việt có dấu
-        if (preg_match('/^([A-Za-z0-9]+)_([\p{L}\p{M}0-9_]+?)(?:_(\d{2}[.\\/-]\d{2}[.\\/-]\d{4}))?$/u', $qrData, $matches)) {
+        $json = json_decode($qrData, true);
+        if (is_array($json)) {
+            $studentId = strtoupper(trim((string) ($json['studentid'] ?? $json['mssv'] ?? $json['student_id'] ?? '')));
+            $studentName = trim((string) ($json['name'] ?? $json['student_name'] ?? $json['full_name'] ?? ''));
+            if ($studentId !== '') {
+                return [
+                    'student_id' => $studentId,
+                    'student_name' => $this->normalizeStudentName($studentName),
+                ];
+            }
+        }
+        if (preg_match('/^([A-Za-z0-9]+)[_-](.+)$/u', $qrData, $matches)) {
             $studentId = strtoupper(trim((string) $matches[1]));
-            $studentName = trim(str_replace('_', ' ', (string) $matches[2]));
+            $studentNameRaw = trim((string) $matches[2]);
+            $studentNameRaw = preg_replace('/([_ -]?\d{2}[.\\/-]\d{2}[.\\/-]\d{4})$/u', '', $studentNameRaw) ?? $studentNameRaw;
+            $studentName = $this->normalizeStudentName($studentNameRaw);
+            $studentNameFromQr = $this->normalizeStudentName((string) $matches[2]);
 
-            if ($studentId !== '' && $studentName !== '') {
+            if ($studentId !== '') {
+                if ($studentName === '' && $studentNameFromQr !== '') {
+                    $studentName = $studentNameFromQr;
+                }
+                if ($studentName === '') {
+                    $studentName = $this->resolveStudentNameById($studentId);
+                }
                 return [
                     'student_id' => $studentId,
                     'student_name' => $studentName,
                 ];
             }
         }
-
-        // Định dạng cũ: MSSV-Ho_Ten
-        if (preg_match('/^([A-Za-z0-9]+)-(.+)$/u', $qrData, $matches)) {
-            $studentId = strtoupper(trim((string) $matches[1]));
-            $studentName = trim(str_replace('_', ' ', (string) $matches[2]));
-
-            if ($studentId !== '' && $studentName !== '') {
-                return [
-                    'student_id' => $studentId,
-                    'student_name' => $studentName,
-                ];
-            }
+        if (preg_match('/^[A-Za-z0-9]+$/', $qrData)) {
+            $studentId = strtoupper(trim($qrData));
+            return [
+                'student_id' => $studentId,
+                'student_name' => $this->resolveStudentNameById($studentId),
+            ];
         }
 
         return null;
     }
+
+    private function resolveStudentNameById(string $studentId): string
+    {
+        $user = User::query()
+            ->where('studentid', $studentId)
+            ->orWhere('email', 'like', $studentId . '@%')
+            ->first();
+
+        if (!$user) {
+            return '';
+        }
+
+        $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        if ($fullName !== '') {
+            return $fullName;
+        }
+
+        return trim((string) ($user->username ?? ''));
+    }
+
+    private function normalizeStudentName(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '';
+        }
+
+        $name = preg_replace('/[_-]+/u', ' ', $name) ?? $name;
+        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+
+        return trim($name);
+    }
 }
+
+
