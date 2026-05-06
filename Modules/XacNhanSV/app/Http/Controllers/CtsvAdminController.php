@@ -24,6 +24,7 @@ class CtsvAdminController extends Controller
             'pending'  => EtpFormStudent::where('status', EtpFormStudent::STATUS_PENDING)->count(),
             'approved' => EtpFormStudent::where('status', EtpFormStudent::STATUS_APPROVED)->count(),
             'rejected' => EtpFormStudent::where('status', EtpFormStudent::STATUS_REJECTED)->count(),
+            'printed'  => EtpFormStudent::where('status', EtpFormStudent::STATUS_PRINTED)->count(),
             'total'    => EtpFormStudent::count(),
         ];
         $recent = EtpFormStudent::with(['form', 'user'])->latest()->limit(10)->get();
@@ -156,7 +157,23 @@ class CtsvAdminController extends Controller
         return back()->with('success', 'Đã từ chối đơn #'.$id.'.');
     }
 
-    // ✅ In hàng loạt
+    // ✅ Đánh dấu đã in thủ công từ trang chi tiết đơn - chỉ Admin
+    public function markPrinted(int $id)
+    {
+        $this->checkAdmin();
+
+        $submission = EtpFormStudent::findOrFail($id);
+
+        if ((int)$submission->status !== EtpFormStudent::STATUS_APPROVED) {
+            return back()->with('error', 'Chỉ có thể đánh dấu đã in khi đơn đã được duyệt!');
+        }
+
+        $submission->update(['status' => EtpFormStudent::STATUS_PRINTED]);
+
+        return back()->with('success', 'Đã đánh dấu đơn #'.$id.' là đã in!');
+    }
+
+    // ✅ In hàng loạt — tự động mark STATUS_PRINTED khi mở trang in
     public function printBulk(Request $request)
     {
         $this->checkAdmin();
@@ -171,6 +188,12 @@ class CtsvAdminController extends Controller
             ->whereIn('id', $ids)
             ->get();
 
-        return view('xacnhansv::ctsv.admin.print-bulk', compact('submissions'));
+        // ✅ Tự động cập nhật trạng thái "Đã in" cho các đơn đã được duyệt
+        // Chỉ cập nhật đơn STATUS_APPROVED, không động vào đơn đã in trước đó
+        $updatedCount = EtpFormStudent::whereIn('id', $ids)
+            ->where('status', EtpFormStudent::STATUS_APPROVED)
+            ->update(['status' => EtpFormStudent::STATUS_PRINTED]);
+
+        return view('xacnhansv::ctsv.admin.print-bulk', compact('submissions', 'updatedCount'));
     }
 }

@@ -36,5 +36,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/requests/{id}',           [CtsvAdminController::class, 'showRequest'])->name('requests.show');
         Route::post('/requests/{id}/approve',  [CtsvAdminController::class, 'approveRequest'])->name('requests.approve');
         Route::post('/requests/{id}/reject',   [CtsvAdminController::class, 'rejectRequest'])->name('requests.reject');
+        Route::post('/requests/{id}/printed',  [CtsvAdminController::class, 'markPrinted'])->name('requests.printed');
     });
 });

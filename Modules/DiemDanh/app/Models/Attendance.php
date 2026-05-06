@@ -28,3 +28,5 @@ class Attendance extends Model
         return $this->belongsTo(Category::class, 'cid', 'cid');
     }
 }
+
+

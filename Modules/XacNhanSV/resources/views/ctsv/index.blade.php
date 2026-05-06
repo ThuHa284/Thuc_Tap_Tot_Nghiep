@@ -15,6 +15,19 @@
     </div>
 
     @auth
+    @php
+        $khoaMap = [
+            'cntt' => 'Công nghệ Thông tin',
+            'ckhi' => 'Cơ khí',
+            'cntp' => 'Công nghệ Thực phẩm',
+            'ddtu' => 'Điện - Điện tử',
+            'dsgn' => 'Thiết kế',
+            'kd'   => 'Kinh doanh',
+            'ktct' => 'Kế toán - Kiểm toán',
+            'qtkd' => 'Quản trị Kinh doanh',
+        ];
+        $khoaLabel = $khoaMap[strtolower(auth()->user()->facultyid ?? '')] ?? (auth()->user()->facultyid ?? '—');
+    @endphp
     <div class="alert alert-light border mb-4 d-flex align-items-center gap-3">
         <div style="font-size:32px">👤</div>
         <div class="flex-grow-1">
@@ -22,7 +35,7 @@
             <div class="small text-muted">
                 MSSV: <strong>{{ auth()->user()->studentid }}</strong>
                 &nbsp;|&nbsp; Lớp: <strong>{{ auth()->user()->classid ?? '—' }}</strong>
-                &nbsp;|&nbsp; Khoa: <strong>{{ auth()->user()->facultyid ?? '—' }}</strong>
+                &nbsp;|&nbsp; Khoa: <strong>{{ $khoaLabel }}</strong>
             </div>
         </div>
         {{-- su = 1 là Admin theo tài liệu đặc tả --}}

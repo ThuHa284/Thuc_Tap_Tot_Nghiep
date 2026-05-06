@@ -30,8 +30,8 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $attendance->studentid }}</td>
                                 <td>
-                                    @if($attendance->student_name)
-                                        {{ $attendance->student_name }}
+                                    @if(!empty($attendance->display_name))
+                                        {{ $attendance->display_name }}
                                     @else
                                         <span class="text-danger fw-bold">Chưa có tên</span>
                                     @endif
@@ -54,3 +54,6 @@
         </div>
 </div>
 @endsection
+
+
+
