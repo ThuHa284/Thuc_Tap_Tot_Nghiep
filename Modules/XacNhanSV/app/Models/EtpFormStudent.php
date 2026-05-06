@@ -11,19 +11,21 @@ class EtpFormStudent extends Model
 
     protected $fillable = [
         'uid', 'studentid', 'formid', 'date1', 'date2',
-        'note', 'data', 'status', 'get_at', 'ReceivingAddress',
+        'note', 'data', 'status', 'get_at', 'ReceivingAddress', 'submitted_at',
     ];
 
     protected $casts = [
-        'data'   => 'array',
-        'date1'  => 'datetime',
-        'date2'  => 'datetime',
-        'status' => 'integer',
+        'data'         => 'array',
+        'date1'        => 'datetime',
+        'date2'        => 'datetime',
+        'status'       => 'integer',
+        'submitted_at' => 'datetime',
     ];
 
     const STATUS_PENDING  = 0;
     const STATUS_APPROVED = 1;
     const STATUS_REJECTED = 2;
+    const STATUS_PRINTED  = 3; // ✅ Thêm mới
 
     public static function statusLabel(int $status): string
     {
@@ -31,6 +33,7 @@ class EtpFormStudent extends Model
             self::STATUS_PENDING  => 'Chờ duyệt',
             self::STATUS_APPROVED => 'Đã duyệt',
             self::STATUS_REJECTED => 'Từ chối',
+            self::STATUS_PRINTED  => 'Đã in',   // ✅ Thêm mới
             default               => 'Không xác định',
         };
     }
@@ -41,6 +44,7 @@ class EtpFormStudent extends Model
             self::STATUS_PENDING  => 'warning',
             self::STATUS_APPROVED => 'success',
             self::STATUS_REJECTED => 'danger',
+            self::STATUS_PRINTED  => 'info',    // ✅ Thêm mới
             default               => 'secondary',
         };
     }

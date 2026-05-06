@@ -32,6 +32,7 @@
                         <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>⏳ Chờ duyệt</option>
                         <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>✅ Đã duyệt</option>
                         <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>❌ Từ chối</option>
+                        <option value="3" {{ request('status') === '3' ? 'selected' : '' }}>🖨️ Đã in</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -123,8 +124,9 @@
                             @endswitch
                         </td>
                         <td>
-                            <span class="badge bg-{{ match($st){ 0=>'warning text-dark', 1=>'success', 2=>'danger', default=>'secondary' } }}">
-                                {{ match($st){ 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', default=>'?' } }}
+                            {{-- ✅ Thêm case 3: Đã in --}}
+                            <span class="badge bg-{{ match($st){ 0=>'warning text-dark', 1=>'success', 2=>'danger', 3=>'info', default=>'secondary' } }}">
+                                {{ match($st){ 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', 3=>'🖨️ Đã in', default=>'?' } }}
                             </span>
                         </td>
                         <td class="text-center">
@@ -204,8 +206,6 @@ function updateCount() {
 function printSelected() {
     const ids = [...document.querySelectorAll('.submission-check:checked')].map(c => c.value);
     if (ids.length === 0) return alert('Chưa chọn đơn nào!');
-
-    // Mở trang in với danh sách ID
     const url = '{{ route("xacnhansv.ctsv.admin.requests.print-bulk") }}?ids=' + ids.join(',');
     window.open(url, '_blank');
 }
