@@ -17,8 +17,30 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+        {{-- ✅ Cảnh báo đã có đơn --}}
+    @if($existingWarning ?? null)
+    <div class="alert alert-warning border-warning d-flex align-items-start gap-3 mb-3">
+        <span style="font-size:24px">⚠️</span>
+        <div>
+            <div class="fw-bold mb-1">Lưu ý!</div>
+            <div>{{ $existingWarning }}</div>
+            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong 
+                <a href="{{ route('xacnhansv.ctsv.my-requests') }}">lịch sử đơn</a>.
+            </div>
+        </div>
+    </div>
+    @endif
+    @php
+        $khoaMap = [
+            'cntt' => 'Công nghệ Thông tin', 'ckhi' => 'Cơ khí',
+            'cntp' => 'Công nghệ Thực phẩm', 'ddtu' => 'Điện - Điện tử',
+            'dsgn' => 'Thiết kế', 'kd' => 'Kinh doanh',
+            'ktct' => 'Kế toán - Kiểm toán', 'qtkd' => 'Quản trị Kinh doanh',
+        ];
+        $khoaTen = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+    @endphp
 
-    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST">
         @csrf
 
     <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
@@ -39,9 +61,20 @@
 
         <p class="mb-1">
             Sinh ngày:
-            <input type="text" name="ngay" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent" placeholder="dd">
-            tháng <input type="text" name="thang" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent" placeholder="mm">
-            năm <input type="text" name="nam" class="border-0 border-bottom px-1" style="width:55px;outline:none;background:transparent" placeholder="yyyy">
+            <input type="number" name="ngay" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent"
+                placeholder="dd" min="1" max="31" required
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            tháng
+            <input type="number" name="thang" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent"
+                placeholder="mm" min="1" max="12" required
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            năm
+            <input type="number" name="nam" class="border-0 border-bottom px-1"
+                style="width:60px;outline:none;background:transparent"
+                placeholder="yyyy" min="1900" max="{{ date('Y') }}" required
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
             &nbsp;&nbsp; Giới tính:
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nam" checked> Nam</label>
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nữ"> Nữ</label>
@@ -51,14 +84,17 @@
             Học lớp: <input type="text" name="lop" class="border-0 border-bottom px-1"
                 style="width:100px;outline:none;background:transparent" value="{{ $user->classid }}" readonly>
             &nbsp; Khoa: <input type="text" name="khoa" class="border-0 border-bottom px-1"
-                style="width:180px;outline:none;background:transparent" value="{{ $user->facultyid }}">
+                style="width:200px;outline:none;background:transparent" value="{{ $khoaTen }}" readonly>
             &nbsp; MSSV: <input type="text" name="mssv" class="border-0 border-bottom px-1"
                 style="width:110px;outline:none;background:transparent" value="{{ $user->studentid }}" readonly>
         </p>
 
         <p class="mb-1">
-            Hộ khẩu thường trú: <input type="text" name="ho_khau" class="border-0 border-bottom px-1"
-                style="width:400px;outline:none;background:transparent" placeholder="Nhập địa chỉ hộ khẩu">
+            Hộ khẩu thường trú:
+            <input type="text" name="ho_khau" class="border-0 border-bottom px-1"
+                style="width:380px;outline:none;background:transparent"
+                placeholder="Nhập địa chỉ hộ khẩu" required
+                pattern=".*\S.*" title="Không được để trống">
         </p>
 
         <p class="mb-1">
@@ -68,8 +104,13 @@
         </p>
 
         <p class="mb-1">
-            Số điện thoại liên lạc: <input type="text" name="sdt" class="border-0 border-bottom px-1"
-                style="width:150px;outline:none;background:transparent" placeholder="Số điện thoại">
+            Số điện thoại liên lạc:
+            <input type="tel" name="sdt" class="border-0 border-bottom px-1"
+                style="width:150px;outline:none;background:transparent"
+                placeholder="0xxxxxxxxx"
+                pattern="^(0[0-9]{9})$" maxlength="10"
+                title="Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0"
+                required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         </p>
 
         <p class="mb-2">Nay tôi làm đơn này xin nhà trường cấp giấy chứng nhận tôi là Sinh viên đang theo học tại trường để bổ túc hồ sơ xin:</p>
@@ -79,9 +120,10 @@
         </p>
 
         <p class="mb-3">
-            Xác nhận khác (Ghi rõ yêu cầu cần xác nhận):
+            Xác nhận khác (Ghi rõ yêu cầu):
             <input type="text" name="xac_nhan_khac" class="border-0 border-bottom px-1"
-                style="width:300px;outline:none;background:transparent" placeholder="Nhập yêu cầu xác nhận">
+                style="width:280px;outline:none;background:transparent"
+                placeholder="Nhập yêu cầu xác nhận">
         </p>
 
         <p class="mb-4">Trân trọng kính chào.</p>
@@ -89,9 +131,19 @@
         <div class="d-flex justify-content-between mt-2">
             <div style="width:50%">
                 <p>Tp.Hồ Chí Minh, ngày
-                    <input type="text" name="ngay_ky" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent">
-                    tháng <input type="text" name="thang_ky" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent">
-                    năm <input type="text" name="nam_ky" class="border-0 border-bottom px-1" style="width:50px;outline:none;background:transparent" value="{{ date('Y') }}">
+                    <input type="number" name="ngay_ky" class="border-0 border-bottom px-1"
+                        style="width:35px;outline:none;background:transparent"
+                        min="1" max="31" value="{{ date('d') }}" required
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    tháng
+                    <input type="number" name="thang_ky" class="border-0 border-bottom px-1"
+                        style="width:35px;outline:none;background:transparent"
+                        min="1" max="12" value="{{ date('m') }}" required
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    năm
+                    <input type="number" name="nam_ky" class="border-0 border-bottom px-1"
+                        style="width:55px;outline:none;background:transparent"
+                        value="{{ date('Y') }}" readonly>
                 </p>
             </div>
             <div class="text-center" style="width:40%">
@@ -105,12 +157,25 @@
         <p>Xác nhận sinh viên: {{ $user->first_name }} {{ $user->last_name }}</p>
         <p class="mb-1">
             Hiện là sinh viên năm thứ
-            <input type="text" name="nam_thu" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent">
-            &nbsp; Học kỳ: <input type="text" name="hoc_ky" class="border-0 border-bottom px-1" style="width:30px;outline:none;background:transparent">
-            &nbsp; Năm học: <input type="text" name="nam_hoc" class="border-0 border-bottom px-1" style="width:100px;outline:none;background:transparent">
-            &nbsp; Khóa học: <input type="text" name="khoa_hoc" class="border-0 border-bottom px-1" style="width:100px;outline:none;background:transparent">
+            <input type="number" name="nam_thu" class="border-0 border-bottom px-1"
+                style="width:35px;outline:none;background:transparent"
+                min="1" max="6" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            &nbsp; Học kỳ:
+            <input type="number" name="hoc_ky" class="border-0 border-bottom px-1"
+                style="width:35px;outline:none;background:transparent"
+                min="1" max="3" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            &nbsp; Năm học:
+            <input type="text" name="nam_hoc" class="border-0 border-bottom px-1"
+                style="width:100px;outline:none;background:transparent"
+                placeholder="2022-2026"
+                pattern="^\d{4}-\d{4}$"
+                title="Định dạng: yyyy-yyyy (VD: 2022-2026)" required>
+            &nbsp; Khóa học:
+            <input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
+                style="width:100px;outline:none;background:transparent"
+                placeholder="VD: K2022" required>
         </p>
-        <p>MSSV: {{ $user->studentid }} &nbsp;&nbsp; Khoa: {{ $user->facultyid }}</p>
+        <p>MSSV: {{ $user->studentid }} &nbsp;&nbsp; Khoa: {{ $khoaTen }}</p>
         <p>Hệ đào tạo: chính quy của Trường Đại học Công nghệ Sài Gòn.</p>
 
         <div class="d-flex justify-content-between mt-2">
@@ -126,23 +191,39 @@
 
     <div class="card mt-3 p-4">
         <div class="mb-3">
-            <label class="fw-semibold">Phương thức nhận hồ sơ:</label>
+            <label class="fw-semibold">Phương thức nhận hồ sơ: <span class="text-danger">*</span></label>
             <div class="mt-1">
-                <label class="me-3"><input type="radio" name="get_at" value="truc_tiep" checked> Phòng CTSV</label>
-                <label class="me-3"><input type="radio" name="get_at" value="email"> Email</label>
-                <label><input type="radio" name="get_at" value="buu_dien"> Bưu điện</label>
+                <label class="me-3">
+                    <input type="radio" name="get_at" value="truc_tiep" checked onchange="toggleDiaChi(this.value)">
+                    🏢 Phòng CTSV
+                </label>
+                <label>
+                    <input type="radio" name="get_at" value="buu_dien" onchange="toggleDiaChi(this.value)">
+                    📮 Bưu điện
+                </label>
+            </div>
+            <div id="dia-chi-buu-dien" class="mt-2" style="display:none">
+                <input type="text" name="ReceivingAddress" id="ReceivingAddress" class="form-control"
+                    placeholder="Nhập địa chỉ nhận hồ sơ qua bưu điện">
             </div>
         </div>
         <div class="mb-3">
             <label class="fw-semibold">Ghi chú</label>
-            <textarea name="note" class="form-control mt-1" rows="3" placeholder="Ghi chú nếu có..."></textarea>
+            <textarea name="note" class="form-control mt-1" rows="3" placeholder="Ghi chú nếu có..." maxlength="1000"></textarea>
         </div>
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-success px-4"><i class="bi bi-send"></i> Lưu</button>
             <a href="{{ route('xacnhansv.index') }}" class="btn btn-outline-secondary px-4">Đóng</a>
         </div>
     </div>
-
     </form>
 </div>
+<script>
+function toggleDiaChi(val) {
+    const box = document.getElementById('dia-chi-buu-dien');
+    const input = document.getElementById('ReceivingAddress');
+    if (val === 'buu_dien') { box.style.display='block'; input.required=true; }
+    else { box.style.display='none'; input.required=false; input.value=''; }
+}
+</script>
 @endsection

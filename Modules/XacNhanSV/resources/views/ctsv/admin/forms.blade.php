@@ -9,9 +9,14 @@
             <h4 class="fw-bold text-primary mb-1">📝 Quản lý mẫu giấy tờ</h4>
             <p class="text-muted mb-0 small">Danh sách các loại giấy tờ sinh viên có thể xin</p>
         </div>
-        <a href="{{ route('xacnhansv.ctsv.admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Dashboard
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('xacnhansv.ctsv.admin.forms.create') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-circle"></i> Thêm mẫu mới
+            </a>
+            <a href="{{ route('xacnhansv.ctsv.admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -30,6 +35,7 @@
                         <th>Tên giấy tờ</th>
                         <th>Mô tả</th>
                         <th class="text-center">Số đơn đã nộp</th>
+                        <th class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,10 +52,31 @@
                                 {{ $form->submissions_count }} đơn
                             </a>
                         </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                {{-- Nút Sửa --}}
+                                <a href="{{ route('xacnhansv.ctsv.admin.forms.edit', $form->formid) }}"
+                                   class="btn btn-sm btn-outline-warning" title="Sửa">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                {{-- Nút Xóa --}}
+                                <form action="{{ route('xacnhansv.ctsv.admin.forms.destroy', $form->formid) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Xóa mẫu «{{ addslashes($form->name) }}»?\nCác đơn liên quan cũng sẽ bị xóa!')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa"
+                                        {{ $form->submissions_count > 0 ? 'disabled title=Có đơn liên quan, không thể xóa' : '' }}>
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center text-muted py-5">
+                        <td colspan="5" class="text-center text-muted py-5">
                             <i class="bi bi-folder-x fs-2 d-block mb-2"></i>
                             Chưa có mẫu giấy tờ nào
                         </td>

@@ -16,8 +16,11 @@ Route::middleware('auth')->prefix('diemdanh')->name('diemdanh.')->group(function
 
     Route::get('/quet-ma', [DiemDanhController::class, 'scanCamera'])->name('scan');
     Route::get('/su-kien/ma-qr', [DiemDanhController::class, 'showEventQr'])->name('show_qr');
+    Route::get('/checkin/{event}', [DiemDanhController::class, 'studentCheckin'])->name('student_checkin');
 
     Route::get('/su-kien/chi-tiet/{category}', [DiemDanhController::class, 'showEventDetails'])->name('show_details');
 
     Route::post('/save-attendance', [DiemDanhController::class, 'saveAttendance'])->name('save');
 });
+
+

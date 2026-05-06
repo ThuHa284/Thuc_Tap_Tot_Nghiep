@@ -5,10 +5,28 @@
 @php
     $d  = $submission->data ?? [];
     $st = (int) $submission->status;
-    $alertType   = match($st){ 0=>'warning', 1=>'success', 2=>'danger', default=>'secondary' };
-    $statusLabel = match($st){ 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', default=>'?' };
-    $badgeClass  = match($st){ 0=>'warning text-dark', 1=>'success', 2=>'danger', default=>'secondary' };
-    $formId      = $submission->form->formid ?? 0;
+    $alertType   = match($st){
+        0 => 'warning',
+        1 => 'success',
+        2 => 'danger',
+        3 => 'info',
+        default => 'secondary'
+    };
+    $statusLabel = match($st){
+        0 => '⏳ Chờ duyệt',
+        1 => '✅ Đã duyệt',
+        2 => '❌ Từ chối',
+        3 => '🖨️ Đã in',
+        default => '?'
+    };
+    $badgeClass  = match($st){
+        0 => 'warning text-dark',
+        1 => 'success',
+        2 => 'danger',
+        3 => 'info',
+        default => 'secondary'
+    };
+    $formId = $submission->form->formid ?? 0;
 @endphp
 
 <div class="container py-4" style="max-width:1000px">
@@ -19,7 +37,9 @@
             <p class="text-muted mb-0 small">{{ $submission->form->name ?? '—' }}</p>
         </div>
         <div class="d-flex gap-2">
-            
+            <button onclick="printForm()" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-printer me-1"></i> In đơn
+            </button>
             <a href="{{ route('xacnhansv.ctsv.admin.requests') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Quay lại
             </a>
@@ -33,11 +53,19 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-x-circle-fill me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="alert alert-{{ $alertType }} d-flex align-items-center gap-2 mb-4">
         <span class="fw-bold fs-6">{{ $statusLabel }}</span>
-        @if($st===0) <span class="small">— Đơn đang chờ xét duyệt</span>
-        @elseif($st===1) <span class="small">— Đơn đã được duyệt</span>
-        @elseif($st===2) <span class="small">— Đơn đã bị từ chối</span>
+        @if($st === 0) <span class="small">— Đơn đang chờ xét duyệt</span>
+        @elseif($st === 1) <span class="small">— Đơn đã được duyệt, chưa in</span>
+        @elseif($st === 2) <span class="small">— Đơn đã bị từ chối</span>
+        @elseif($st === 3) <span class="small">— Đơn đã được in và hoàn tất</span>
         @endif
     </div>
 
@@ -95,7 +123,6 @@
             {{-- MẪU GIẤY TỜ --}}
             <div id="print-area">
             @if($formId == 1)
-            {{-- Form 1: Hoãn NVQS --}}
             <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
                 <div class="text-center mb-3">
                     <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -135,7 +162,6 @@
             </div>
 
             @elseif($formId == 2)
-            {{-- Form 2: Xác nhận khác --}}
             <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
                 <div class="text-center mb-3">
                     <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -168,7 +194,6 @@
             </div>
 
             @elseif($formId == 3)
-            {{-- Form 3: Vay vốn --}}
             <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
                 <div class="text-center mb-3">
                     <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -199,7 +224,6 @@
             </div>
 
             @elseif($formId == 4)
-            {{-- Form 4: Không bị xử phạt hành chính --}}
             <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
                 <div class="row mb-2">
                     <div class="col-6 text-center"><div>TRƯỜNG ĐH CÔNG NGHỆ SÀI GÒN</div><div class="fw-bold">PHÒNG CÔNG TÁC SINH VIÊN</div><div>———————————</div></div>
@@ -233,7 +257,6 @@
             </div>
 
             @elseif($formId == 5)
-            {{-- Form 5: LĐ-TBXH --}}
             <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
                 <div class="row mb-2">
                     <div class="col-6 text-center"><div>TRƯỜNG ĐH CÔNG NGHỆ SÀI GÒN</div><div class="fw-bold">PHÒNG CÔNG TÁC SINH VIÊN</div><div>———————————</div></div>
@@ -274,7 +297,6 @@
             </div>
 
             @else
-            {{-- Fallback: hiển thị dạng bảng nếu không có mẫu --}}
             @if(!empty($submission->data))
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-white fw-bold">📝 Nội dung đơn</div>
@@ -338,10 +360,9 @@
             <div class="card shadow-sm" style="position:sticky;top:20px">
                 <div class="card-header bg-white fw-bold">⚡ Hành động</div>
                 <div class="card-body">
-                    {{-- Nút in --}}
-                    
 
                     @if($st === 0)
+                        {{-- Chờ duyệt: hiện nút Duyệt và Từ chối --}}
                         <form action="{{ route('xacnhansv.ctsv.admin.requests.approve', $submission->id) }}"
                               method="POST" class="mb-3">
                             @csrf
@@ -361,12 +382,25 @@
                                 </button>
                             </form>
                         </div>
+
                     @elseif($st === 1)
-                        <div class="alert alert-success mb-0 text-center">
+                        {{-- Đã duyệt: hiện nút Đánh dấu đã in --}}
+                        <div class="alert alert-success text-center mb-3">
                             <i class="bi bi-check-circle-fill fs-3 d-block mb-2"></i>
                             <strong>Đã duyệt</strong>
+                            <div class="small mt-1">Chưa in</div>
                         </div>
+                        <form action="{{ route('xacnhansv.ctsv.admin.requests.printed', $submission->id) }}"
+                              method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-info w-100 text-white"
+                                onclick="return confirm('Xác nhận đã in đơn #{{ $submission->id }}?')">
+                                <i class="bi bi-printer-fill me-1"></i> Đánh dấu đã in
+                            </button>
+                        </form>
+
                     @elseif($st === 2)
+                        {{-- Từ chối --}}
                         <div class="alert alert-danger mb-0">
                             <i class="bi bi-x-circle-fill"></i> <strong>Đã từ chối</strong>
                             @if($submission->note)
@@ -374,12 +408,22 @@
                                 <small><strong>Lý do:</strong> {{ $submission->note }}</small>
                             @endif
                         </div>
+
+                    @elseif($st === 3)
+                        {{-- Đã in --}}
+                        <div class="alert alert-info text-center mb-0">
+                            <i class="bi bi-printer-fill fs-3 d-block mb-2"></i>
+                            <strong>🖨️ Đã in</strong>
+                            <div class="small mt-1 text-muted">Đơn đã được in và hoàn tất</div>
+                        </div>
                     @endif
 
                     <hr>
                     <div class="text-muted small">
                         <div><strong>ID đơn:</strong> #{{ $submission->id }}</div>
-                        <div><strong>Ngày nộp:</strong><br>{{ $submission->created_at ? $submission->created_at->format('H:i — d/m/Y') : '—' }}</div>
+                        <div class="mt-1"><strong>Ngày nộp:</strong><br>
+                            {{ $submission->created_at ? $submission->created_at->format('H:i — d/m/Y') : '—' }}
+                        </div>
                         <div class="mt-1"><strong>Trạng thái:</strong>
                             <span class="badge bg-{{ $badgeClass }}">{{ $statusLabel }}</span>
                         </div>
@@ -387,6 +431,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 

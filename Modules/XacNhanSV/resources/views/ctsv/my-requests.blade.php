@@ -57,14 +57,14 @@
                                 <td class="text-muted small">#{{ $s->id }}</td>
                                 <td class="fw-semibold small">{{ $s->form->name ?? '—' }}</td>
                                 <td class="small">
-                                    {{ $s->created_at ? $s->created_at->format('d/m/Y H:i') : '—' }}
+                                    {{ $s->created_at ? $s->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : '—' }}
                                 </td>
 
-                                {{-- Ngày lấy giấy = ngày duyệt --}}
+                                {{-- Ngày lấy giấy = ngày duyệt (st=1) hoặc ngày in (st=3) --}}
                                 <td class="small">
-                                    @if($st === 1 && $s->updated_at)
+                                    @if(in_array($st, [1, 3]) && $s->updated_at)
                                         <span class="text-success fw-semibold">
-                                            {{ \Carbon\Carbon::parse($s->updated_at)->format('d/m/Y') }}
+                                            {{ \Carbon\Carbon::parse($s->updated_at)->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y') }}
                                         </span>
                                     @elseif($st === 0)
                                         <span class="text-muted">Chờ duyệt</span>
@@ -75,8 +75,8 @@
 
                                 {{-- Hết hạn lấy = ngày duyệt + 3 ngày --}}
                                 <td class="small">
-                                    @if($st === 1 && $s->updated_at)
-                                        @php $hetHan = \Carbon\Carbon::parse($s->updated_at)->addDays(3); @endphp
+                                    @if(in_array($st, [1, 3]) && $s->updated_at)
+                                        @php $hetHan = \Carbon\Carbon::parse($s->updated_at)->setTimezone('Asia/Ho_Chi_Minh')->addDays(3); @endphp
                                         <span class="{{ $hetHan->isPast() ? 'text-danger' : 'text-warning' }} fw-semibold">
                                             {{ $hetHan->format('d/m/Y') }}
                                             @if($hetHan->isPast())
@@ -105,12 +105,14 @@
                                             0 => 'warning text-dark',
                                             1 => 'success',
                                             2 => 'danger',
+                                            3 => 'info',        // ✅ Thêm mới
                                             default => 'secondary'
                                         };
                                         $label = match($st) {
                                             0 => '⏳ Chờ duyệt',
                                             1 => '✅ Đã duyệt',
                                             2 => '❌ Từ chối',
+                                            3 => '🖨️ Đã in',   // ✅ Thêm mới
                                             default => '?'
                                         };
                                     @endphp

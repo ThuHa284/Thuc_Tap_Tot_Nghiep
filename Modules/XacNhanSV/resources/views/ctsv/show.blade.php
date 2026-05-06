@@ -16,15 +16,32 @@
 
     @php
         $st = (int) $submission->status;
-        $alertType = match($st) { 0=>'warning', 1=>'success', 2=>'danger', default=>'secondary' };
-        $statusLabel = match($st) { 0=>'⏳ Chờ duyệt', 1=>'✅ Đã duyệt', 2=>'❌ Từ chối', default=>'?' };
+        $alertType = match($st) {
+            0 => 'warning',
+            1 => 'success',
+            2 => 'danger',
+            3 => 'info',      // ✅ Đã in
+            default => 'secondary'
+        };
+        $statusLabel = match($st) {
+            0 => '⏳ Chờ duyệt',
+            1 => '✅ Đã duyệt',
+            2 => '❌ Từ chối',
+            3 => '🖨️ Đã in',  // ✅ Đã in
+            default => '?'
+        };
     @endphp
 
     <div class="alert alert-{{ $alertType }} d-flex align-items-center gap-2 mb-4">
         <span class="fw-bold">{{ $statusLabel }}</span>
-        @if($st === 0) <span class="small">— Đơn đang chờ xét duyệt</span>
-        @elseif($st === 1) <span class="small">— Đơn đã được duyệt, vui lòng đến nhận theo hình thức đã chọn</span>
-        @elseif($st === 2) <span class="small">— Đơn đã bị từ chối</span>
+        @if($st === 0)
+            <span class="small">— Đơn đang chờ xét duyệt</span>
+        @elseif($st === 1)
+            <span class="small">— Đơn đã được duyệt, vui lòng đến nhận theo hình thức đã chọn</span>
+        @elseif($st === 2)
+            <span class="small">— Đơn đã bị từ chối</span>
+        @elseif($st === 3)
+            <span class="small">— Đơn đã được in, vui lòng đến nhận giấy tờ tại phòng CTSV</span>
         @endif
     </div>
 
@@ -133,6 +150,10 @@
         @if($st === 0)
             <span class="btn btn-warning disabled">
                 <i class="bi bi-hourglass-split"></i> Đang chờ duyệt
+            </span>
+        @elseif($st === 3)
+            <span class="btn btn-info disabled text-white">
+                <i class="bi bi-printer-fill"></i> Đã in — Vui lòng đến nhận giấy
             </span>
         @endif
     </div>

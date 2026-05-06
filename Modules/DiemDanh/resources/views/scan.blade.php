@@ -29,8 +29,6 @@
 <script>
     let lastSentCode = "";
     let isProcessing = false; // Cờ chặn việc gửi trùng lặp khi đang xử lý
-
-    // Hàm phát âm thanh thông báo
     function playSound(type) {
         const sounds = {
             'success': 'https://www.soundjay.com/buttons/beep-07.wav',
@@ -60,7 +58,6 @@
         .then(data => {
             if(data.status === 'success') {
                 playSound('success');
-                // Lấy data.student_name từ Controller trả về để hiển thị tên chuẩn
                 resultDiv.innerHTML = `✅ Đã lưu: <strong>${data.student_name}</strong> thành công!`;
                 resultDiv.className = "text-success fw-bold mt-3";
             } else if (data.status === 'info') {
@@ -79,7 +76,6 @@
             resultDiv.className = "text-danger mt-3";
         })
         .finally(() => {
-            // Sau 3 giây cho phép quét mã tiếp theo
             setTimeout(() => { 
                 isProcessing = false; 
                 lastSentCode = ""; 
@@ -90,11 +86,7 @@
     function onScanSuccess(decodedText) {
         let code = decodedText.trim();
         if (!code || isProcessing) return;
-
-        // Nếu mã QR giống hệt mã vừa quét xong thì bỏ qua (chờ hết cooldown)
         if (code === lastSentCode) return;
-
-        // Kiểm tra định dạng cơ bản (phải có dấu gạch dưới như DH522..._NGUYEN...)
         if (code.indexOf('_') === -1) {
             let resultDiv = document.getElementById('scan-result');
             resultDiv.innerHTML = `❌ Mã QR không đúng định dạng nhà trường.`;
@@ -105,8 +97,6 @@
         lastSentCode = code;
         sendAttendance(code);
     }
-
-    // Cấu hình Camera
     let html5QrcodeScanner = new Html5QrcodeScanner(
         "reader", 
         { 
@@ -120,3 +110,4 @@
     html5QrcodeScanner.render(onScanSuccess, (error) => {});
 </script>
 @endsection
+
