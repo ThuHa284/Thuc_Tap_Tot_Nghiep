@@ -19,17 +19,39 @@
 </nav>
 
 {{-- Header --}}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header d-flex justify-content-between align-items-center">
     <div>
-        <h3 class="mb-1 fw-bold text-dark">
-            <i class="fas fa-building text-primary me-2"></i>Quản lý Khai báo Nội trú
-        </h3>
-        <p class="text-muted mb-0">Danh sách sinh viên đã khai báo nơi ở</p>
+        <h2 class="mb-1 fw-bold">
+            <i class="fas fa-building me-2"></i>Quản lý Khai báo Nội trú
+        </h2>
+        <p class="mb-0 opacity-75 small">Danh sách sinh viên đã khai báo nơi ở</p>
     </div>
-    <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">
-        <i class="fas fa-users me-1"></i>{{ $danhSach->count() }} khai báo
-    </span>
+    <a href="{{ route('tintuc.create') }}?type=khai_bao" class="btn btn-light rounded-pill px-4 fw-medium">
+        <i class="fas fa-plus me-1"></i> Thêm khai báo nội trú
+    </a>
 </div>
+
+@php
+    $activeDeclaration = \Modules\TinTuc\Models\TinTuc::currentKhaiBaoNoiTru();
+@endphp
+
+@if($activeDeclaration)
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <div class="text-muted small mb-1">Kỳ khai báo đang mở</div>
+            <div class="fw-bold text-dark mb-1">{{ $activeDeclaration->title }}</div>
+            <div class="text-secondary small">
+                Từ {{ \Carbon\Carbon::parse($activeDeclaration->khai_bao_start_at)->format('d/m/Y H:i') }}
+                đến {{ \Carbon\Carbon::parse($activeDeclaration->khai_bao_end_at)->format('d/m/Y H:i') }}
+            </div>
+        </div>
+        <a href="{{ route('tintuc.show', $activeDeclaration->id) }}" class="btn btn-outline-primary rounded-pill px-4">
+            <i class="fas fa-eye me-1"></i> Xem bài viết
+        </a>
+    </div>
+</div>
+@endif
 
 {{-- Alerts --}}
 @if(session('success'))
@@ -54,6 +76,11 @@
                 <button type="submit" class="btn btn-primary w-100 rounded-pill">
                     <i class="fas fa-search me-1"></i> Tìm kiếm
                 </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-center justify-content-md-start justify-content-between gap-2">
+                <span class="badge bg-primary rounded-pill px-3 py-2 w-100 text-center">
+                    <i class="fas fa-users me-1"></i>{{ $danhSach->count() }} sinh viên
+                </span>
             </div>
             @if(request('search'))
             <div class="col-md-2">
@@ -130,6 +157,13 @@
 </div>
 
 <style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
     .bg-gradient {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }

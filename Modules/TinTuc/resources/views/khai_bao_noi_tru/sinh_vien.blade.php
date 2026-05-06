@@ -3,13 +3,6 @@
 @section('title', 'Khai báo nội trú')
 
 @section('content')
-{{-- Menu ngang --}}
-<div class="row">
-    <div class="col-12">
-        @include('tintuc::components.tintuc-menu')
-    </div>
-</div>
-
 {{-- Breadcrumb --}}
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb bg-white shadow-sm rounded-3 px-3 py-2 mb-0">
@@ -61,7 +54,7 @@
 
 {{-- Form Card --}}
 <div class="card border-0 shadow-lg rounded-3">
-    <div class="card-header bg-gradient text-white border-0 py-4">
+    <div class="card-header bg-stu-primary text-white border-0 py-4">
         <h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i>Form khai báo</h5>
     </div>
     <div class="card-body p-4">
@@ -88,8 +81,11 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="text" name="so_dien_thoai_sv" class="form-control rounded-3 border-0 shadow-sm @error('so_dien_thoai_sv') is-invalid @enderror" 
-                               id="sdt_sv" placeholder="ĐT" value="{{ old('so_dien_thoai_sv', $khaiBao->so_dien_thoai_sv ?? '') }}" required>
+                               id="sdt_sv" placeholder="ĐT" value="{{ old('so_dien_thoai_sv', $khaiBao->so_dien_thoai_sv ?? '') }}" 
+                               required pattern="[0-9]{10,11}" maxlength="11" inputmode="numeric"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         <label for="sdt_sv"><i class="fas fa-phone me-2 text-muted"></i>ĐT cá nhân <span class="text-danger">*</span></label>
+                        <small class="text-muted">Chỉ nhập số (10-11 chữ số)</small>
                         @error('so_dien_thoai_sv')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -99,7 +95,8 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="date" name="ngay_vao_tro" class="form-control rounded-3 border-0 shadow-sm @error('ngay_vao_tro') is-invalid @enderror" 
-                               id="ngay_vao" value="{{ old('ngay_vao_tro', $khaiBao->ngay_vao_tro ?? '') }}" required>
+                               id="ngay_vao" value="{{ old('ngay_vao_tro', $khaiBao->ngay_vao_tro ?? '') }}" 
+                               max="{{ date('Y-m-d') }}" required>
                         <label for="ngay_vao"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày vào trọ <span class="text-danger">*</span></label>
                         @error('ngay_vao_tro')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -122,8 +119,11 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="text" name="ten_chu_tro" class="form-control rounded-3 border-0 shadow-sm @error('ten_chu_tro') is-invalid @enderror" 
-                               id="chu_tro" placeholder="Chủ trọ" value="{{ old('ten_chu_tro', $khaiBao->ten_chu_tro ?? '') }}" required>
+                               id="chu_tro" placeholder="Chủ trọ" value="{{ old('ten_chu_tro', $khaiBao->ten_chu_tro ?? '') }}" 
+                               required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                               oninput="this.value = this.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '')">
                         <label for="chu_tro"><i class="fas fa-user-tie me-2 text-muted"></i>Họ tên chủ trọ <span class="text-danger">*</span></label>
+                        <small class="text-muted">Chỉ nhập chữ cái</small>
                         @error('ten_chu_tro')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -133,8 +133,11 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="text" name="so_dien_thoai_chu_tro" class="form-control rounded-3 border-0 shadow-sm @error('so_dien_thoai_chu_tro') is-invalid @enderror" 
-                               id="sdt_chu_tro" placeholder="ĐT chủ trọ" value="{{ old('so_dien_thoai_chu_tro', $khaiBao->so_dien_thoai_chu_tro ?? '') }}" required>
+                               id="sdt_chu_tro" placeholder="ĐT chủ trọ" value="{{ old('so_dien_thoai_chu_tro', $khaiBao->so_dien_thoai_chu_tro ?? '') }}" 
+                               required pattern="[0-9]{10,11}" maxlength="11" inputmode="numeric"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         <label for="sdt_chu_tro"><i class="fas fa-phone-square me-2 text-muted"></i>ĐT chủ trọ <span class="text-danger">*</span></label>
+                        <small class="text-muted">Chỉ nhập số (10-11 chữ số)</small>
                         @error('so_dien_thoai_chu_tro')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -153,7 +156,7 @@
             <hr class="my-4">
 
             <div class="d-flex justify-content-center">
-                <button type="submit" class="btn btn-primary rounded-pill px-5 py-2">
+                <button type="submit" class="btn btn-stu-primary rounded-pill px-5 py-2">
                     <i class="fas fa-save me-2"></i> {{ $khaiBao ? 'Cập nhật khai báo' : 'Gửi khai báo' }}
                 </button>
             </div>
@@ -162,15 +165,16 @@
 </div>
 
 <style>
-    .bg-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    .bg-stu-primary {
+        background: #004a99 !important;
     }
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .btn-stu-primary {
+        background: #004a99;
         border: none;
+        color: #fff;
     }
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+    .btn-stu-primary:hover {
+        background: #003a7a;
         color: white;
     }
     .form-floating > .form-control:focus,

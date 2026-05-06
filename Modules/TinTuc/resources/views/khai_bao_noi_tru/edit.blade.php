@@ -53,8 +53,11 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="text" name="so_dien_thoai_sv" class="form-control rounded-3 border-0 shadow-sm @error('so_dien_thoai_sv') is-invalid @enderror" 
-                                       id="sdt_sv" placeholder="ĐT SV" value="{{ old('so_dien_thoai_sv', $khaiBao->so_dien_thoai_sv) }}" required>
+                                       id="sdt_sv" placeholder="ĐT SV" value="{{ old('so_dien_thoai_sv', $khaiBao->so_dien_thoai_sv) }}" 
+                                       required maxlength="11" inputmode="numeric"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 <label for="sdt_sv"><i class="fas fa-phone me-2 text-muted"></i>ĐT Sinh viên</label>
+                                <small class="text-muted">Chỉ nhập số (10-11 chữ số)</small>
                                 @error('so_dien_thoai_sv')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -63,7 +66,8 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="date" name="ngay_vao_tro" class="form-control rounded-3 border-0 shadow-sm @error('ngay_vao_tro') is-invalid @enderror" 
-                                       id="ngay_vao" value="{{ old('ngay_vao_tro', $khaiBao->ngay_vao_tro) }}" required>
+                                       id="ngay_vao" value="{{ old('ngay_vao_tro', $khaiBao->ngay_vao_tro) }}" 
+                                       max="{{ date('Y-m-d') }}" required>
                                 <label for="ngay_vao"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày vào trọ</label>
                                 @error('ngay_vao_tro')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -85,8 +89,11 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="text" name="ten_chu_tro" class="form-control rounded-3 border-0 shadow-sm @error('ten_chu_tro') is-invalid @enderror" 
-                                       id="chu_tro" placeholder="Chủ trọ" value="{{ old('ten_chu_tro', $khaiBao->ten_chu_tro) }}" required>
+                                       id="chu_tro" placeholder="Chủ trọ" value="{{ old('ten_chu_tro', $khaiBao->ten_chu_tro) }}" 
+                                       required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                                       oninput="this.value = this.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '')">
                                 <label for="chu_tro"><i class="fas fa-user-tie me-2 text-muted"></i>Tên chủ trọ</label>
+                                <small class="text-muted">Chỉ nhập chữ cái</small>
                                 @error('ten_chu_tro')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -95,8 +102,11 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input type="text" name="so_dien_thoai_chu_tro" class="form-control rounded-3 border-0 shadow-sm @error('so_dien_thoai_chu_tro') is-invalid @enderror" 
-                                       id="sdt_chu_tro" placeholder="ĐT chủ trọ" value="{{ old('so_dien_thoai_chu_tro', $khaiBao->so_dien_thoai_chu_tro) }}" required>
+                                       id="sdt_chu_tro" placeholder="ĐT chủ trọ" value="{{ old('so_dien_thoai_chu_tro', $khaiBao->so_dien_thoai_chu_tro) }}" 
+                                       required maxlength="11" inputmode="numeric"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 <label for="sdt_chu_tro"><i class="fas fa-phone-square me-2 text-muted"></i>ĐT Chủ trọ</label>
+                                <small class="text-muted">Chỉ nhập số (10-11 chữ số)</small>
                                 @error('so_dien_thoai_chu_tro')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
