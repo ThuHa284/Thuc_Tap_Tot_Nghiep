@@ -15,15 +15,37 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
+        'email',
         'password',
         'studentid',
         'first_name',
         'last_name',
-        'gid'
+        'gid',
+        'su'
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
+    public function isAdmin()
+    {
+        return $this->su == 1;
+    }
+
+    public function isStudent()
+    {
+        return $this->su == 0;
+    }
+    public function isCollaborator()
+    {
+        return $this->su == -1;
+    }
+
+
+    public function getFullNameAttribute()
+    {
+        return $this->last_name . ' ' . $this->first_name;
+    }
 }

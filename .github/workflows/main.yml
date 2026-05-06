@@ -1,0 +1,47 @@
+name: 🚀 Deploy Production (Vite & Tailwind v4)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: 📦 Install & Build Frontend
+      run: |
+        npm install
+        npm run build
+
+    - name: 📁 Prepare public_html folder
+      run: |
+        mkdir -p public_html
+        
+        # 1. Copy 4 file rời rạc
+        cp public/index.php public_html/
+        cp public/.htaccess public_html/ 2>/dev/null || true
+        cp public/favicon.ico public_html/ 2>/dev/null || true
+        cp public/robots.txt public_html/ 2>/dev/null || true
+        
+        
+        # Giả định thư mục static nằm trong public. 
+        # Lệnh 2>/dev/null || true giúp CI/CD không bị lỗi ngừng lại nếu vô tình không tìm thấy thư mục này.
+        mv public/static public_html/ 2>/dev/null || true 
+
+    - name: 📤 Deploy to Domain
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /domains/ntthuha.id.vn/
