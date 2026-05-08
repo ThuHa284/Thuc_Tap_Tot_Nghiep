@@ -42,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::prefix('xacnhansv')->name('xacnhansv.')->group(function () {
         Route::get('/', [\Modules\XacNhanSV\Http\Controllers\XacNhanSVController::class, 'index'])->name('index');
     });
+    // ================== MODULE KHAI BÁO NGOẠI TRÚ ==================
+    Route::prefix('khaibaongoaitru')->name('khaibaongoaitru.')->group(function () {
+        Route::get('/', [\Modules\KhaiBaoNgoaiTru\Http\Controllers\KhaiBaoNgoaiTruController::class, 'index'])->name('index');
+    });
 });
 
 // ================== ADMIN ONLY ==================

@@ -1,0 +1,11 @@
+{
+    "name": "QuanLyUser",
+    "alias": "quanlyuser",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\QuanLyUser\\Providers\\QuanLyUserServiceProvider"
+    ],
+    "files": []
+}
