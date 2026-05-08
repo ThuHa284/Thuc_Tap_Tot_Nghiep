@@ -1,0 +1,11 @@
+{
+    "name": "KhaiBaoNgoaiTru",
+    "alias": "khaibaongoaitru",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\KhaiBaoNgoaiTru\\Providers\\KhaiBaoNgoaiTruServiceProvider"
+    ],
+    "files": []
+}
