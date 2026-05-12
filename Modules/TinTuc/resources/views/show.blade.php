@@ -18,10 +18,21 @@
 </nav>
 
 {{-- Hero --}}
+@php
+    $declarationText = \Illuminate\Support\Str::lower($tinTuc->title . ' ' . $tinTuc->content);
+    $isDeclarationPost = (bool) $tinTuc->is_khai_bao_noi_tru || \Illuminate\Support\Str::contains($declarationText, 'khai báo nội trú') || \Illuminate\Support\Str::contains($declarationText, 'khai bao noi tru');
+    $declarationOpen = $isDeclarationPost && $tinTuc->khai_bao_start_at && $tinTuc->khai_bao_end_at && now()->between($tinTuc->khai_bao_start_at, $tinTuc->khai_bao_end_at);
+@endphp
+
 <div class="text-center mb-4">
     <span class="badge bg-primary rounded-pill px-4 py-2 mb-3">
         <i class="fas fa-tag me-1"></i>{{ $tinTuc->loaitin->name ?? 'Chưa phân loại' }}
     </span>
+    @if($isDeclarationPost)
+    <span class="badge bg-success rounded-pill px-4 py-2 mb-3 ms-2">
+        <i class="fas fa-home me-1"></i>Khai báo nội trú
+    </span>
+    @endif
     <h1 class="display-6 fw-bold text-dark mb-3">{{ $tinTuc->title }}</h1>
     <div class="d-flex justify-content-center gap-4 text-muted small flex-wrap">
         <span><i class="far fa-calendar-alt me-1"></i>
@@ -62,11 +73,67 @@
 
 {{-- Card chính --}}
 <div class="card border-0 shadow-lg rounded-3 overflow-hidden mb-4">
+    @if($isDeclarationPost)
+    <div class="border-bottom bg-white p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="text-muted small mb-1">Kỳ khai báo nội trú</div>
+                <div class="fw-semibold text-dark">
+                    <i class="fas fa-calendar-check me-1 text-success"></i>
+                    {{ $tinTuc->khai_bao_ky ? 'Kỳ ' . $tinTuc->khai_bao_ky . ' - ' : '' }}
+                    {{ $tinTuc->khai_bao_start_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_start_at)->format('d/m/Y H:i') : 'Chưa đặt thời gian' }}
+                    <span class="text-muted">đến</span>
+                    {{ $tinTuc->khai_bao_end_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_end_at)->format('d/m/Y H:i') : 'Chưa đặt thời gian' }}
+                </div>
+            </div>
+            @if($declarationOpen && !auth()->user()->isAdmin())
+            <a href="{{ route('khai_bao_noi_tru.kich_hoat', $tinTuc->id) }}" class="btn btn-success rounded-pill px-4">
+                <i class="fas fa-arrow-right me-1"></i> Khai báo tại đây
+            </a>
+            @elseif(!$declarationOpen)
+            <span class="badge bg-secondary rounded-pill px-3 py-2">Chưa mở hoặc đã hết hạn</span>
+            @endif
+        </div>
+    </div>
+    @endif
+
     {{-- Hình ảnh --}}
     @if($tinTuc->img)
     <div class="text-center bg-light py-4" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
         <div class="d-inline-block rounded-3 overflow-hidden shadow-lg">
             <img src="{{ asset($tinTuc->img) }}" class="img-fluid rounded-3" style="max-height: 450px; max-width: 100%;" alt="{{ $tinTuc->title }}">
+        </div>
+    </div>
+    @endif
+
+    @php
+        $attachmentItems = $tinTuc->attachment_items;
+    @endphp
+    @if(!empty($attachmentItems))
+    <div class="border-top bg-white p-3 p-md-4">
+        <div class="d-grid gap-2">
+            @foreach($attachmentItems as $index => $attachmentItem)
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 border rounded-3 p-3 bg-light">
+                    <div>
+                        <div class="text-muted small mb-1">Tệp đính kèm</div>
+                        <div class="fw-semibold text-dark">
+                            {{ $attachmentItem['label'] ?? 'Tệp đính kèm' }}
+                        </div>
+                    </div>
+                    @php
+                        $filePath = $attachmentItem['path'];
+                        // Main file (attachment_path) uses download route, extra files use downloadFile
+                        $isMainFile = ($index === 0 && !empty($tinTuc->attachment_name));
+                        $downloadUrl = $isMainFile
+                            ? route('tintuc.download', $tinTuc->id)
+                            : route('tintuc.downloadFile', ['tin_tuc_id' => $tinTuc->id, 'path' => $filePath]);
+                    @endphp
+                    <a href="{{ $downloadUrl }}" class="fw-semibold text-primary text-decoration-none d-inline-flex align-items-center gap-2">
+                        <i class="fas fa-paperclip me-1 text-primary"></i>
+                        Xem chi tiết
+                    </a>
+                </div>
+            @endforeach
         </div>
     </div>
     @endif

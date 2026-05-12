@@ -111,7 +111,7 @@
                             <h5 class="mb-0 fw-bold text-primary">
                                 <i class="bi bi-journal-text me-2"></i>{{ $quiz->quiz_name ?? ('Đề #' . ($quiz->quid ?? '')) }}
                             </h5>
-                            <small class="text-muted">Thí sinh: <strong>{{ session('thi_trac_nghiem_user.name') }}</strong> ({{ session('thi_trac_nghiem_user.studentid') }})</small>
+                            <small class="text-muted">Thí sinh: <strong>{{ $user['name'] }}</strong> ({{ $user['studentid'] }})</small>
                         </div>
                         <span class="badge bg-soft-primary text-primary px-3 py-2" style="background-color: #e0e7ff; font-size: 0.9rem;">
                             Câu hỏi <span id="current-question-num">1</span>/{{ count($questions) }}

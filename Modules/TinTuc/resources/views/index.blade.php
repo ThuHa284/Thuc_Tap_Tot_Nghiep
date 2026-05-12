@@ -145,6 +145,10 @@
             @foreach($danhSachTin as $tin)
             <div class="col-md-6 col-xl-4">
                 <div class="card h-100 border-0 rounded-3 news-card overflow-hidden shadow-sm {{ $tin->status == 0 && auth()->check() && auth()->user()->isAdmin() ? 'bg-light' : '' }}">
+                    @php
+                        $declarationText = \Illuminate\Support\Str::lower($tin->title . ' ' . $tin->content);
+                        $isDeclarationPost = (bool) $tin->is_khai_bao_noi_tru || \Illuminate\Support\Str::contains($declarationText, 'khai báo nội trú') || \Illuminate\Support\Str::contains($declarationText, 'khai bao noi tru');
+                    @endphp
                     <div class="position-relative">
                         @if($tin->img)
                         <img src="{{ asset($tin->img) }}" class="card-img-top rounded-top-3"
@@ -179,7 +183,25 @@
                             {{ $tin->date1 ? \Carbon\Carbon::parse($tin->date1)->format('d/m/Y') : '' }}
                         </p>
 
-                        <p class="text-secondary small flex-grow-1">
+                        @if(!empty($tin->attachment_path))
+                        <p class="text-primary small mb-2">
+                            <i class="fas fa-paperclip me-1"></i> Có {{ $tin->attachment_display_label ?? 'file' }} đính kèm
+                        </p>
+                        @endif
+
+                        @if(!empty($tin->attachments))
+                        <p class="text-primary small mb-2">
+                            <i class="fas fa-layer-group me-1"></i> Có {{ count($tin->attachments) }} tệp bổ sung
+                        </p>
+                        @endif
+
+                        @if($isDeclarationPost)
+                        <p class="text-success small mb-2">
+                            <i class="fas fa-home me-1"></i> Kỳ khai báo nội trú {{ $tin->khai_bao_ky ? '- Kỳ ' . $tin->khai_bao_ky : '' }}
+                        </p>
+                        @endif
+
+                        <p class="text-secondary small grow">
                             {{ Str::limit(strip_tags($tin->content), 80) }}
                         </p>
 
