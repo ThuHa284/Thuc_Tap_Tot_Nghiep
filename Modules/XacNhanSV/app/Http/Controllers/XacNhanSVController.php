@@ -20,6 +20,36 @@ class XacNhanSVController extends Controller
         return in_array(auth()->user()->su, [0, -1]);
     }
 
+    // ================================================================
+    // Trả về ngày bắt đầu và kết thúc của học kỳ hiện tại:
+    //   Kỳ 1 : tháng 8  – 12
+    //   Kỳ 2 : tháng 1  – 5
+    //   Kỳ hè: tháng 6  – 7
+    // ================================================================
+    private function getSemesterDateRange(): array
+    {
+        $month = now()->month;
+        $year  = now()->year;
+
+        if ($month >= 8 && $month <= 12) {
+            return [
+                Carbon::create($year, 8, 1)->startOfDay(),
+                Carbon::create($year, 12, 31)->endOfDay(),
+            ];
+        } elseif ($month >= 1 && $month <= 5) {
+            return [
+                Carbon::create($year, 1, 1)->startOfDay(),
+                Carbon::create($year, 5, 31)->endOfDay(),
+            ];
+        } else {
+            return [
+                Carbon::create($year, 6, 1)->startOfDay(),
+                Carbon::create($year, 7, 31)->endOfDay(),
+            ];
+        }
+    }
+
+    // ================================================================
     public function index()
     {
         $user = auth()->user();
@@ -40,143 +70,46 @@ class XacNhanSVController extends Controller
         return view('xacnhansv::ctsv.index', compact('forms'));
     }
 
+    // ================================================================
     public function showForm(int $formid)
     {
         if ($this->isAdmin()) {
-            return redirect()->route('xacnhansv.ctsv.index')
+            return redirect()->route('xacnhansv.index')
                 ->with('error', 'Admin không thể nộp đơn.');
         }
 
         $form = EtpForm::with('details')->findOrFail($formid);
         $user = auth()->user();
 
-        // ============================================================
-        // ✅ KIỂM TRA ĐỂ HIỆN CẢNH BÁO TRÊN FORM
-        // ============================================================
+        // ✅ YÊU CẦU 3: Lấy ngày sinh từ DB, không để SV nhập tay
+        $dob = !empty($user->birthdate)
+            ? Carbon::parse($user->birthdate)->format('d/m/Y')
+            : null;
+
+        // ✅ YÊU CẦU 1: Kiểm tra đơn trong kỳ học hiện tại
+        [$semStart, $semEnd] = $this->getSemesterDateRange();
+
         $existingWarning = null;
+        $cannotSubmit    = false;
 
-        // Form 1: Hoãn NVQS — 1 năm/lần
-        if ($formid === 1) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 1)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
+        $existing = EtpFormStudent::where('uid', $user->uid)
+            ->where('formid', $formid)
+            ->whereBetween('created_at', [$semStart, $semEnd])
+            ->whereIn('status', [
+                EtpFormStudent::STATUS_PENDING,
+                EtpFormStudent::STATUS_APPROVED,
+                EtpFormStudent::STATUS_PRINTED,
+            ])
+            ->first();
 
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                $existingWarning = 'Năm ' . now()->year . ' bạn đã nộp đơn hoãn NVQS vào ngày '
-                    . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel . '.';
-            }
-        }
-
-        // Form 2: Xác nhận khác — chặn khi còn đơn chưa xử lý xong
-        if ($formid === 2) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 2)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt, vui lòng đến nhận giấy',
-                    default => 'đang xử lý',
-                };
-                $existingWarning = 'Bạn còn đơn xác nhận #' . $existing->id
-                    . ' (' . $statusLabel . ')'
-                    . '. Vui lòng hoàn tất đơn cũ trước khi nộp đơn mới.';
-            }
-        }
-
-        // Form 3: Vay vốn — 1 năm/lần
-        if ($formid === 3) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 3)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                $existingWarning = 'Năm ' . now()->year . ' bạn đã nộp đơn vay vốn vào ngày '
-                    . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel . '.';
-            }
-        }
-
-        // Form 4: Không bị xử phạt — 6 tháng/lần
-        if ($formid === 4) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 4)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->where('created_at', '>=', now()->subMonths(6))
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                $hetHan = $existing->created_at->addMonths(6)->format('d/m/Y');
-                $existingWarning = 'Bạn đã nộp đơn xác nhận không bị xử phạt vào ngày '
-                    . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel
-                    . '. Có thể nộp lại sau ngày ' . $hetHan . '.';
-            }
-        }
-
-        // Form 5: LĐ-TBXH — 1 năm/lần
-        if ($formid === 5) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 5)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                $existingWarning = 'Năm ' . now()->year . ' bạn đã nộp đơn ưu đãi LĐ-TBXH vào ngày '
-                    . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel . '.';
-            }
+        if ($existing) {
+            $cannotSubmit    = true;
+            $statusLabel     = $this->statusLabel((int) $existing->status);
+            $existingWarning = 'Học kỳ này bạn đã nộp đơn vào ngày '
+                . $existing->created_at->format('d/m/Y')
+                . ' — Trạng thái: ' . $statusLabel . '.'
+                . ' Mỗi kỳ chỉ được nộp 1 đơn.'
+                . ' <a href="' . route('xacnhansv.ctsv.my-requests.show', $existing->id) . '">Xem đơn #' . $existing->id . '</a>.';
         }
 
         $templateMap = [
@@ -188,179 +121,62 @@ class XacNhanSVController extends Controller
         ];
 
         $template = $templateMap[$formid] ?? 'xacnhansv::ctsv.forms.form-dynamic';
-        return view($template, compact('form', 'user', 'existingWarning'));
+        return view($template, compact('form', 'user', 'existingWarning', 'cannotSubmit', 'dob'));
     }
 
+    // ================================================================
     public function store(Request $request, int $formid)
     {
         if ($this->isAdmin()) {
-            return redirect()->route('xacnhansv.ctsv.index')
+            return redirect()->route('xacnhansv.index')
                 ->with('error', 'Admin không thể nộp đơn.');
         }
 
         $user = auth()->user();
 
-        // ============================================================
-        // ✅ RÀNG BUỘC THEO TỪNG FORM
-        // ============================================================
+        // ✅ YÊU CẦU 1: Chặn nộp nếu đã có đơn trong kỳ học hiện tại
+        [$semStart, $semEnd] = $this->getSemesterDateRange();
 
-        // Form 1: Hoãn NVQS — 1 năm/lần
-        if ($formid === 1) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 1)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
+        $existing = EtpFormStudent::where('uid', $user->uid)
+            ->where('formid', $formid)
+            ->whereBetween('created_at', [$semStart, $semEnd])
+            ->whereIn('status', [
+                EtpFormStudent::STATUS_PENDING,
+                EtpFormStudent::STATUS_APPROVED,
+                EtpFormStudent::STATUS_PRINTED,
+            ])
+            ->first();
 
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                return redirect()->back()->with('error',
-                    'Bạn đã nộp đơn hoãn NVQS năm ' . now()->year
-                    . ' vào ngày ' . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel
-                    . '. Mỗi sinh viên chỉ được nộp 1 lần/năm!'
-                );
-            }
+        if ($existing) {
+            $statusLabel = $this->statusLabel((int) $existing->status);
+            return redirect()->back()->with('error',
+                'Bạn đã nộp đơn này trong học kỳ hiện tại vào ngày '
+                . $existing->created_at->format('d/m/Y')
+                . ' — Trạng thái: ' . $statusLabel
+                . '. Mỗi kỳ học chỉ được nộp 1 đơn!'
+            );
         }
 
-        // Form 2: Xác nhận khác — chặn khi còn đơn chưa xử lý xong
-        if ($formid === 2) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 2)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt, vui lòng đến nhận giấy',
-                    default => 'đang xử lý',
-                };
-                return redirect()->back()->with('error',
-                    'Bạn còn đơn xác nhận #' . $existing->id
-                    . ' (' . $statusLabel . ')'
-                    . '. Vui lòng hoàn tất đơn cũ trước khi nộp đơn mới!'
-                );
-            }
-        }
-
-        // Form 3: Vay vốn — 1 năm/lần
-        if ($formid === 3) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 3)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                return redirect()->back()->with('error',
-                    'Bạn đã nộp đơn vay vốn năm ' . now()->year
-                    . ' vào ngày ' . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel
-                    . '. Mỗi sinh viên chỉ được nộp 1 lần/năm!'
-                );
-            }
-        }
-
-        // Form 4: Không bị xử phạt hành chính — 6 tháng/lần
-        if ($formid === 4) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 4)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->where('created_at', '>=', now()->subMonths(6))
-                ->first();
-
-            if ($existing) {
-                $hetHanNopLai = $existing->created_at->addMonths(6)->format('d/m/Y');
-                $statusLabel  = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                return redirect()->back()->with('error',
-                    'Bạn đã nộp đơn xác nhận không bị xử phạt vào ngày '
-                    . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel
-                    . '. Bạn có thể nộp lại sau ngày ' . $hetHanNopLai . '!'
-                );
-            }
-        }
-
-        // Form 5: LĐ-TBXH — 1 năm/lần
-        if ($formid === 5) {
-            $existing = EtpFormStudent::where('uid', $user->uid)
-                ->where('formid', 5)
-                ->whereYear('created_at', now()->year)
-                ->whereIn('status', [
-                    EtpFormStudent::STATUS_PENDING,
-                    EtpFormStudent::STATUS_APPROVED,
-                    EtpFormStudent::STATUS_PRINTED,
-                ])
-                ->first();
-
-            if ($existing) {
-                $statusLabel = match((int)$existing->status) {
-                    EtpFormStudent::STATUS_PENDING  => 'đang chờ duyệt',
-                    EtpFormStudent::STATUS_APPROVED => 'đã được duyệt',
-                    EtpFormStudent::STATUS_PRINTED  => 'đã được in',
-                    default => 'đã tồn tại',
-                };
-                return redirect()->back()->with('error',
-                    'Bạn đã nộp đơn ưu đãi LĐ-TBXH năm ' . now()->year
-                    . ' vào ngày ' . $existing->created_at->format('d/m/Y')
-                    . ' — Trạng thái: ' . $statusLabel
-                    . '. Mỗi sinh viên chỉ được nộp 1 lần/năm!'
-                );
-            }
-        }
-
-        // ============================================================
         // ✅ VALIDATE & LƯU ĐƠN
-        // ============================================================
-
         $form = EtpForm::with('details')->findOrFail($formid);
 
-        $rules = [
+        $request->validate([
             'date1'            => 'nullable|date',
             'date2'            => 'nullable|date|after_or_equal:date1',
             'note'             => 'nullable|string|max:1000',
             'get_at'           => 'nullable|string|max:10',
             'ReceivingAddress' => 'nullable|string|max:300',
-        ];
-
-        $request->validate($rules);
+        ]);
 
         $excludeKeys = ['_token', 'date1', 'date2', 'note', 'get_at', 'ReceivingAddress'];
-        $formData = [];
+        $formData    = [];
         foreach ($request->except($excludeKeys) as $key => $value) {
             $formData[$key] = $value;
+        }
+
+        // ✅ YÊU CẦU 3: Lưu ngày sinh từ DB vào data (không lấy từ request)
+        if (!empty($user->birthdate)) {
+            $formData['_dob'] = Carbon::parse($user->birthdate)->format('d/m/Y');
         }
 
         EtpFormStudent::create([
@@ -381,14 +197,40 @@ class XacNhanSVController extends Controller
             ->with('success', 'Đã nộp đơn thành công! Vui lòng chờ admin duyệt.');
     }
 
+    // ================================================================
+    // ✅ YÊU CẦU 2: Sinh viên xóa đơn — chỉ khi đơn PENDING (chưa duyệt)
+    // ================================================================
+    public function destroy(int $id)
+    {
+        if ($this->isAdmin()) {
+            abort(403, 'Admin không dùng chức năng này.');
+        }
+
+        $user       = auth()->user();
+        $submission = EtpFormStudent::where('uid', $user->uid)->findOrFail($id);
+
+        if ((int) $submission->status !== EtpFormStudent::STATUS_PENDING) {
+            return redirect()->back()->with('error',
+                'Không thể xóa đơn #' . $id
+                . ' vì đơn đã được xử lý (trạng thái: '
+                . $this->statusLabel((int) $submission->status) . ').'
+            );
+        }
+
+        $submission->delete();
+
+        return redirect()
+            ->route('xacnhansv.ctsv.my-requests')
+            ->with('success', 'Đã xóa đơn #' . $id . ' thành công.');
+    }
+
+    // ================================================================
     public function myRequests()
     {
         $user = auth()->user();
 
         if ($this->isAdmin()) {
-            $submissions = EtpFormStudent::with('form')
-                ->latest()
-                ->paginate(10);
+            $submissions = EtpFormStudent::with('form')->latest()->paginate(10);
             return view('xacnhansv::admin.all-requests', compact('submissions'));
         }
 
@@ -399,13 +241,13 @@ class XacNhanSVController extends Controller
         return view('xacnhansv::ctsv.my-requests', compact('submissions'));
     }
 
+    // ================================================================
     public function show(int $id)
     {
         $user = auth()->user();
 
         if ($this->isAdmin()) {
-            $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
-                ->findOrFail($id);
+            $submission = EtpFormStudent::with(['form.details', 'fileDetails'])->findOrFail($id);
         } else {
             $submission = EtpFormStudent::with(['form.details', 'fileDetails'])
                 ->where('uid', $user->uid)
@@ -414,11 +256,15 @@ class XacNhanSVController extends Controller
 
         $ngayLayGiay = null;
         $ngayHetHan  = null;
-        if (in_array((int)$submission->status, [EtpFormStudent::STATUS_APPROVED, EtpFormStudent::STATUS_PRINTED])
+        if (in_array((int) $submission->status, [EtpFormStudent::STATUS_APPROVED, EtpFormStudent::STATUS_PRINTED])
             && $submission->updated_at) {
             $ngayLayGiay = Carbon::parse($submission->updated_at);
             $ngayHetHan  = Carbon::parse($submission->updated_at)->addDays(3);
         }
+
+        // ✅ YÊU CẦU 2: Cho view biết SV có thể xóa đơn không
+        $canDelete = !$this->isAdmin()
+            && (int) $submission->status === EtpFormStudent::STATUS_PENDING;
 
         $templateMap = [
             1 => 'xacnhansv::ctsv.show-forms.form-1-nvqs',
@@ -429,18 +275,17 @@ class XacNhanSVController extends Controller
         ];
 
         $template = $templateMap[$submission->formid] ?? 'xacnhansv::ctsv.show-forms.form-dynamic';
-        return view($template, compact('submission', 'ngayLayGiay', 'ngayHetHan'));
+        return view($template, compact('submission', 'ngayLayGiay', 'ngayHetHan', 'canDelete'));
     }
 
+    // ================================================================
     public function approve(int $id)
     {
         if (!$this->isAdmin()) {
             abort(403, 'Bạn không có quyền thực hiện thao tác này.');
         }
 
-        $submission = EtpFormStudent::findOrFail($id);
-        $submission->update(['status' => EtpFormStudent::STATUS_APPROVED]);
-
+        EtpFormStudent::findOrFail($id)->update(['status' => EtpFormStudent::STATUS_APPROVED]);
         return redirect()->back()->with('success', 'Đã duyệt đơn thành công.');
     }
 
@@ -450,9 +295,21 @@ class XacNhanSVController extends Controller
             abort(403, 'Bạn không có quyền thực hiện thao tác này.');
         }
 
-        $submission = EtpFormStudent::findOrFail($id);
-        $submission->update(['status' => EtpFormStudent::STATUS_REJECTED]);
-
+        EtpFormStudent::findOrFail($id)->update(['status' => EtpFormStudent::STATUS_REJECTED]);
         return redirect()->back()->with('success', 'Đã từ chối đơn.');
+    }
+
+    // ================================================================
+    // HELPER
+    // ================================================================
+    private function statusLabel(int $status): string
+    {
+        return match($status) {
+            EtpFormStudent::STATUS_PENDING  => 'Đang chờ duyệt',
+            EtpFormStudent::STATUS_APPROVED => 'Đã được duyệt',
+            EtpFormStudent::STATUS_PRINTED  => 'Đã in',
+            EtpFormStudent::STATUS_REJECTED => 'Đã từ chối',
+            default                         => 'Không rõ',
+        };
     }
 }

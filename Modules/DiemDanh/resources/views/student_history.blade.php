@@ -27,6 +27,7 @@
                             <th>Sự kiện</th>
                             <th style="width: 220px;">Thời gian tham gia</th>
                             <th style="width: 130px;">CTXH</th>
+                            <th style="width: 170px;">Điểm rèn luyện</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,10 +42,11 @@
                                     @endif
                                 </td>
                                 <td>{{ number_format((float) ($event->ctxh_days ?? 0), 1) }}</td>
+                                <td>{{ (int)($event->training_points ?? 0) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted">Bạn chưa tham gia sự kiện nào.</td>
+                                <td colspan="4" class="text-center text-muted">Bạn chưa tham gia sự kiện nào.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -58,5 +60,3 @@
     </div>
 </div>
 @endsection
-
-

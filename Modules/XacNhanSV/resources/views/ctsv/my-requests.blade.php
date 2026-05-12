@@ -8,7 +8,7 @@
         <div>
             <h4 class="fw-bold text-primary mb-1">📋 Lịch sử đơn của tôi</h4>
             <p class="text-muted mb-0 small">
-                {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+                {{ auth()->user()->last_name }} {{ auth()->user()->first_name }}
                 &nbsp;|&nbsp; MSSV: {{ auth()->user()->studentid }}
             </p>
         </div>
@@ -20,6 +20,13 @@
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-x-circle-fill me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -105,14 +112,14 @@
                                             0 => 'warning text-dark',
                                             1 => 'success',
                                             2 => 'danger',
-                                            3 => 'info',        // ✅ Thêm mới
+                                            3 => 'info',
                                             default => 'secondary'
                                         };
                                         $label = match($st) {
                                             0 => '⏳ Chờ duyệt',
                                             1 => '✅ Đã duyệt',
                                             2 => '❌ Từ chối',
-                                            3 => '🖨️ Đã in',   // ✅ Thêm mới
+                                            3 => '🖨️ Đã in',
                                             default => '?'
                                         };
                                     @endphp
@@ -120,10 +127,26 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route('xacnhansv.ctsv.my-requests.show', $s->id) }}"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-eye"></i> Chi tiết
-                                    </a>
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <a href="{{ route('xacnhansv.ctsv.my-requests.show', $s->id) }}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i> Chi tiết
+                                        </a>
+
+                                        {{-- Nút xóa: chỉ hiện khi đơn đang chờ duyệt (status = 0) --}}
+                                        @if($st === 0)
+                                            <form action="{{ route('xacnhansv.ctsv.destroy', $s->id) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa đơn #{{ $s->id }}?\nHành động này không thể hoàn tác.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        title="Xóa đơn này">
+                                                    <i class="bi bi-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach

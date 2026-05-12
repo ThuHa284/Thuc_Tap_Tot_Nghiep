@@ -17,19 +17,30 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-        {{-- ✅ Cảnh báo đã có đơn --}}
+
+    {{-- ✅ Cảnh báo đã có đơn trong kỳ --}}
     @if($existingWarning ?? null)
     <div class="alert alert-warning border-warning d-flex align-items-start gap-3 mb-3">
         <span style="font-size:24px">⚠️</span>
         <div>
             <div class="fw-bold mb-1">Lưu ý!</div>
-            <div>{{ $existingWarning }}</div>
-            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong 
+            <div>{!! $existingWarning !!}</div>
+            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong
                 <a href="{{ route('xacnhansv.ctsv.my-requests') }}">lịch sử đơn</a>.
             </div>
         </div>
     </div>
     @endif
+
+    {{-- ✅ Nếu đã có đơn trong kỳ thì ẩn form, chỉ hiện nút quay lại --}}
+    @if($cannotSubmit ?? false)
+        <div class="text-center mt-4">
+            <a href="{{ route('xacnhansv.ctsv.my-requests') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Xem đơn của tôi
+            </a>
+        </div>
+    @else
+
     @php
         $khoaMap = [
             'cntt' => 'Công nghệ Thông tin',
@@ -42,6 +53,12 @@
             'qtkd' => 'Quản trị Kinh doanh',
         ];
         $khoaTen = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+
+        // ✅ Tách ngày/tháng/năm từ $dob (định dạng d/m/Y) do controller truyền xuống
+        $dobParts  = $dob ? explode('/', $dob) : [null, null, null];
+        $dobNgay   = $dobParts[0] ?? '';
+        $dobThang  = $dobParts[1] ?? '';
+        $dobNam    = $dobParts[2] ?? '';
     @endphp
 
     <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST" id="formDon">
@@ -53,7 +70,7 @@
             <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
             <div><em>Độc lập – Tự do – Hạnh phúc</em></div>
             <div>———————————</div>
-            <div class="fw-bold mt-2" style="font-size:16px">ĐƠN XIN XÁC NHẬN 1</div>
+            <div class="fw-bold mt-2" style="font-size:16px">ĐƠN XIN XÁC NHẬN HOÃN NGHĨA VỤ QUÂN SỰ</div>
         </div>
 
         <p class="mb-2">Kính gửi: Ban Giám Hiệu Trường Đại học Công nghệ Sài Gòn</p>
@@ -61,28 +78,31 @@
         <p class="mb-1">
             Tôi tên: <input type="text" name="ho_ten" class="border-0 border-bottom px-1"
                 style="width:220px;outline:none;background:transparent"
-                value="{{ $user->first_name }} {{ $user->last_name }}" readonly>
+                value="{{ $user->last_name }} {{ $user->first_name }}" readonly>
             &nbsp;&nbsp; Giới tính:
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nam" checked> Nam</label>
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nữ"> Nữ</label>
         </p>
 
+        {{-- ✅ Ngày sinh: lấy từ DB, hiển thị readonly, không cho nhập --}}
         <p class="mb-1">
             Sinh ngày:
-            {{-- Chỉ nhập số, ngày 1-31 --}}
-            <input type="number" name="ngay_sinh" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="dd" min="1" max="31" required>
+            <input type="text" name="ngay_sinh" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNgay }}" readonly tabindex="-1">
             tháng
-            {{-- Chỉ nhập số, tháng 1-12 --}}
-            <input type="number" name="thang_sinh" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="mm" min="1" max="12" required>
+            <input type="text" name="thang_sinh" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobThang }}" readonly tabindex="-1">
             năm
-            {{-- Chỉ nhập số, năm 4 chữ số --}}
-            <input type="number" name="nam_sinh" class="border-0 border-bottom px-1"
-                style="width:60px;outline:none;background:transparent"
-                placeholder="yyyy" min="1900" max="{{ date('Y') }}" required>
+            <input type="text" name="nam_sinh" class="border-0 border-bottom px-1"
+                style="width:60px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNam }}" readonly tabindex="-1">
+            @if(!$dob)
+                <span class="text-danger small ms-2" style="font-family:sans-serif">
+                    ⚠️ Chưa có ngày sinh trong hệ thống, vui lòng liên hệ phòng CTSV.
+                </span>
+            @endif
         </p>
 
         <p class="mb-1">
@@ -112,7 +132,6 @@
 
         <p class="mb-1">
             Số điện thoại liên lạc:
-            {{-- Chỉ nhập số, đúng 10 chữ số --}}
             <input type="tel" name="sdt" class="border-0 border-bottom px-1"
                 style="width:150px;outline:none;background:transparent"
                 placeholder="0xxxxxxxxx"
@@ -157,7 +176,7 @@
             <div class="text-center" style="width:40%">
                 <p class="fw-bold mb-0">Người làm đơn</p>
                 <br><br><br>
-                <p>{{ $user->first_name }} {{ $user->last_name }}</p>
+                <p>{{ $user->last_name }} {{ $user->first_name }}</p>
             </div>
         </div>
 
@@ -165,7 +184,7 @@
 
         <div class="text-center fw-bold mb-3">XÁC NHẬN CỦA TRƯỜNG ĐẠI HỌC CÔNG NGHỆ SÀI GÒN</div>
 
-        <p>Xác nhận sinh viên: {{ $user->first_name }} {{ $user->last_name }}</p>
+        <p>Xác nhận sinh viên: {{ $user->last_name }} {{ $user->first_name }}</p>
         <p class="mb-1">
             Hiện là sinh viên năm thứ
             <input type="number" name="nam_thu" class="border-0 border-bottom px-1"
@@ -182,11 +201,10 @@
                 pattern="^\d{4}-\d{4}$"
                 title="Định dạng: yyyy-yyyy (VD: 2022-2026)"
                 required>
-            &nbsp; Khóa học:
-            <input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
-                style="width:100px;outline:none;background:transparent"
-                placeholder="VD: K2022"
-                required>
+           &nbsp; Khóa học:
+<input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
+    style="width:100px;outline:none;background:transparent"
+    value="{{ $user->academic_year }}" readonly>
         </p>
         <p>MSSV: {{ $user->studentid }} &nbsp;&nbsp; Khoa: {{ $khoaTen }}</p>
         <p>Hệ đào tạo: chính quy của Trường Đại học Công nghệ Sài Gòn.</p>
@@ -219,7 +237,6 @@
                     Bưu điện
                 </label>
             </div>
-            {{-- Ô địa chỉ bưu điện --}}
             <div id="dia-chi-buu-dien" class="mt-2" style="display:none">
                 <input type="text" name="ReceivingAddress" id="ReceivingAddress"
                     class="form-control"
@@ -240,11 +257,13 @@
     </div>
 
     </form>
+
+    @endif {{-- end @if(!$cannotSubmit) --}}
 </div>
 
 <script>
 function toggleDiaChi(val) {
-    const box = document.getElementById('dia-chi-buu-dien');
+    const box   = document.getElementById('dia-chi-buu-dien');
     const input = document.getElementById('ReceivingAddress');
     if (val === 'buu_dien') {
         box.style.display = 'block';
@@ -255,12 +274,5 @@ function toggleDiaChi(val) {
         input.value = '';
     }
 }
-
-// Chỉ cho nhập số vào các ô number
-document.querySelectorAll('input[type="number"]').forEach(function(el) {
-    el.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
-});
 </script>
 @endsection

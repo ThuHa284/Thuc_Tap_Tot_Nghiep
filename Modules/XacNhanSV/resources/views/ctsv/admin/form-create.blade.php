@@ -40,61 +40,29 @@
                               placeholder="Mô tả ngắn về loại giấy tờ này">{{ old('description') }}</textarea>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Ảnh mẫu (url)</label>
-                        <input type="text" name="url" class="form-control"
-                               value="{{ old('url') }}" placeholder="VD: frm1.jpg">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Chức vụ người ký</label>
-                        <input type="text" name="signtitle" class="form-control"
-                               value="{{ old('signtitle') }}" placeholder="VD: Hiệu trưởng">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Tên người ký</label>
-                        <input type="text" name="signname" class="form-control"
-                               value="{{ old('signname') }}" placeholder="VD: PGS. TS Cao Hào Thi">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Mã trường</label>
-                        <input type="text" name="schoolid" class="form-control"
-                               value="{{ old('schoolid') }}" placeholder="VD: DSG">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Tên trường</label>
-                        <input type="text" name="schoolname" class="form-control"
-                               value="{{ old('schoolname') }}" placeholder="VD: Trường ĐH Công nghệ Sài Gòn">
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ảnh mẫu (url)</label>
+                    <input type="text" name="url" class="form-control"
+                           value="{{ old('url') }}" placeholder="VD: frm1.jpg">
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Người ký <span class="text-danger">*</span></label>
+                    <select name="leader_id" class="form-select @error('leader_id') is-invalid @enderror" required>
+                        <option value="">-- Chọn người ký --</option>
+                        @foreach($leaders as $leader)
+                            <option value="{{ $leader->id }}" {{ old('leader_id') == $leader->id ? 'selected' : '' }}>
+                                {{ $leader->title }} – {{ $leader->fullname }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('leader_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
-                <span>📝 Các trường thông tin sinh viên cần điền</span>
-                <button type="button" class="btn btn-sm btn-outline-success" id="btnAddField">
-                    <i class="bi bi-plus-lg"></i> Thêm trường
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="fields-wrapper">
-                    {{-- Mặc định 1 trường rỗng --}}
-                    <div class="input-group mb-2 field-row">
-                        <span class="input-group-text bg-light text-muted small">1</span>
-                        <input type="text" name="fields[]" class="form-control"
-                               placeholder="VD: Họ và tên, Ngày sinh, Lý do...">
-                        <button type="button" class="btn btn-outline-danger btn-remove-field">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-                <p class="text-muted small mb-0 mt-2">
-                    <i class="bi bi-info-circle"></i>
-                    Mỗi trường là một thông tin SV cần nhập khi nộp đơn. Có thể kéo để sắp xếp thứ tự.
-                </p>
-            </div>
-        </div>
+       
 
         <div class="d-flex gap-2 justify-content-end">
             <a href="{{ route('xacnhansv.ctsv.admin.forms') }}" class="btn btn-outline-secondary">Hủy</a>

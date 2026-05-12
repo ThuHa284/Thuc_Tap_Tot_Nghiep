@@ -31,7 +31,7 @@
     <div class="alert alert-light border mb-4 d-flex align-items-center gap-3">
         <div style="font-size:32px">👤</div>
         <div class="flex-grow-1">
-            <div class="fw-semibold">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+            <div class="fw-semibold">{{ auth()->user()->last_name }} {{ auth()->user()->first_name }}</div>
             <div class="small text-muted">
                 MSSV: <strong>{{ auth()->user()->studentid }}</strong>
                 &nbsp;|&nbsp; Lớp: <strong>{{ auth()->user()->classid ?? '—' }}</strong>

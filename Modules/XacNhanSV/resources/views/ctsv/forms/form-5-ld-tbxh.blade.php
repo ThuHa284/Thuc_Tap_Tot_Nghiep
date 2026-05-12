@@ -17,19 +17,30 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+
     {{-- ✅ Cảnh báo đã có đơn --}}
     @if($existingWarning ?? null)
     <div class="alert alert-warning border-warning d-flex align-items-start gap-3 mb-3">
         <span style="font-size:24px">⚠️</span>
         <div>
             <div class="fw-bold mb-1">Lưu ý!</div>
-            <div>{{ $existingWarning }}</div>
-            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong 
+            <div>{!! $existingWarning !!}</div>
+            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong
                 <a href="{{ route('xacnhansv.ctsv.my-requests') }}">lịch sử đơn</a>.
             </div>
         </div>
     </div>
     @endif
+
+    {{-- ✅ Khoá form nếu không được nộp --}}
+    @if($cannotSubmit ?? false)
+        <div class="text-center mt-4">
+            <a href="{{ route('xacnhansv.ctsv.my-requests') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Xem đơn của tôi
+            </a>
+        </div>
+    @else
+
     @php
         $khoaMap = [
             'cntt' => 'Công nghệ Thông tin', 'ckhi' => 'Cơ khí',
@@ -38,9 +49,15 @@
             'ktct' => 'Kế toán - Kiểm toán', 'qtkd' => 'Quản trị Kinh doanh',
         ];
         $khoaTen = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+
+        // ✅ Tách ngày/tháng/năm từ $dob (định dạng d/m/Y) do controller truyền xuống
+        $dobParts = $dob ? explode('/', $dob) : [null, null, null];
+        $dobNgay  = $dobParts[0] ?? '';
+        $dobThang = $dobParts[1] ?? '';
+        $dobNam   = $dobParts[2] ?? '';
     @endphp
 
-    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST">
+    <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST" id="formDon">
         @csrf
 
     <div class="card shadow" style="font-family:'Times New Roman',serif;font-size:14px;padding:40px 50px;background:#fff;border:1px solid #ccc">
@@ -68,25 +85,31 @@
             Sinh viên:
             <input type="text" name="ho_ten" class="border-0 border-bottom px-1"
                 style="width:250px;outline:none;background:transparent"
-                value="{{ $user->first_name }} {{ $user->last_name }}" readonly>
+                value="{{ $user->last_name }} {{ $user->first_name }}" readonly>
             &nbsp;&nbsp; Giới tính:
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nam" checked> Nam</label>
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nữ"> Nữ</label>
         </p>
 
+        {{-- ✅ Ngày sinh: lấy từ DB, hiển thị readonly --}}
         <p class="mb-1">
             Sinh ngày:
-            <input type="number" name="ngay_sinh" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="dd" min="1" max="31" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="ngay_sinh" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNgay }}" readonly tabindex="-1">
             tháng
-            <input type="number" name="thang_sinh" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="mm" min="1" max="12" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="thang_sinh" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobThang }}" readonly tabindex="-1">
             năm
-            <input type="number" name="nam_sinh" class="border-0 border-bottom px-1"
-                style="width:60px;outline:none;background:transparent"
-                placeholder="yyyy" min="1900" max="{{ date('Y') }}" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="nam_sinh" class="border-0 border-bottom px-1"
+                style="width:60px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNam }}" readonly tabindex="-1">
+            @if(!$dob)
+                <span class="text-danger small ms-2" style="font-family:sans-serif">
+                    ⚠️ Chưa có ngày sinh trong hệ thống, vui lòng liên hệ phòng CTSV.
+                </span>
+            @endif
         </p>
 
         <p class="mb-1">
@@ -147,8 +170,9 @@
                 style="width:100px;outline:none;background:transparent"
                 placeholder="2024-2025" pattern="^\d{4}-\d{4}$" title="Định dạng: yyyy-yyyy" required>
             &nbsp; Khóa:
-            <input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
-                style="width:100px;outline:none;background:transparent" placeholder="2022-2026" required>
+<input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
+    style="width:100px;outline:none;background:transparent"
+    value="{{ $user->academic_year }}" readonly>
         </p>
 
         <p class="mb-1">
@@ -232,11 +256,16 @@
                         value="{{ date('Y') }}" readonly>
                 </p>
                 <p class="fw-bold mb-0">Người làm đơn</p><br><br><br>
-                <p>{{ $user->first_name }} {{ $user->last_name }}</p>
+                <p>{{ $user->last_name }} {{ $user->first_name }}</p>
             </div>
             <div class="text-center" style="width:40%">
-                <p class="fw-bold mb-0">TRƯỞNG PHÒNG CTSV</p><br><br><br>
+                {{-- ✅ Dùng $form->signtitle / $form->signname --}}
+                <p class="fw-bold mb-0">{{ strtoupper($form->signtitle ?? 'TRƯỞNG PHÒNG CTSV') }}</p>
+                <br><br><br>
                 <p>(Ký, ghi rõ họ tên, đóng dấu)</p>
+                @if($form->signname ?? null)
+                    <p>{{ $form->signname }}</p>
+                @endif
             </div>
         </div>
     </div>
@@ -268,14 +297,24 @@
             <a href="{{ route('xacnhansv.index') }}" class="btn btn-outline-secondary px-4">Đóng</a>
         </div>
     </div>
+
     </form>
+
+    @endif {{-- end @if(!$cannotSubmit) --}}
 </div>
+
 <script>
 function toggleDiaChi(val) {
-    const box = document.getElementById('dia-chi-buu-dien');
+    const box   = document.getElementById('dia-chi-buu-dien');
     const input = document.getElementById('ReceivingAddress');
-    if (val === 'buu_dien') { box.style.display='block'; input.required=true; }
-    else { box.style.display='none'; input.required=false; input.value=''; }
+    if (val === 'buu_dien') {
+        box.style.display = 'block';
+        input.required = true;
+    } else {
+        box.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
 }
 </script>
 @endsection

@@ -12,6 +12,12 @@
                 Tổng số lượt điểm danh:
                 <span class="badge bg-success">{{ $attendances->count() }}</span>
                 <span class="ms-2 badge bg-warning text-dark">CTXH: {{ number_format((float) $category->ctxh_days, 1) }}</span>
+                @if((int)($category->training_points ?? 0) > 0)
+                    <span class="ms-2 badge bg-info text-dark">Điểm rèn luyện: {{ (int) $category->training_points }}</span>
+                @endif
+                @if($category->attendance_start_at && $category->attendance_end_at)
+                    <span class="ms-2 badge bg-secondary">Khung: {{ $category->attendance_start_at->format('H:i d/m/Y') }} - {{ $category->attendance_end_at->format('H:i d/m/Y') }}</span>
+                @endif
             </p>
 
             <div class="table-responsive">
@@ -20,7 +26,7 @@
                         <tr>
                             <th scope="col" style="width: 5%;">#</th>
                             <th scope="col" style="width: 20%;">Mã sinh viên</th>
-                            <th scope="col">Họ và Tên</th>
+                            <th scope="col">Họ và tên</th>
                             <th scope="col" style="width: 25%;">Thời gian</th>
                         </tr>
                     </thead>
@@ -48,12 +54,8 @@
             </div>
 
             <hr>
-            <a href="{{ route('diemdanh.create_event') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Quay lại
-            </a>
+            <a href="{{ route('diemdanh.create_event') }}" class="btn btn-secondary">Quay lại</a>
         </div>
+    </div>
 </div>
 @endsection
-
-
-

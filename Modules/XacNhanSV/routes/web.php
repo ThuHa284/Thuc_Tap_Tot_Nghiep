@@ -22,6 +22,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/xacnhansv/my-requests/{id}', [XacNhanSVController::class, 'show'])
         ->name('xacnhansv.ctsv.my-requests.show');
 
+    // ✅ THÊM: Sinh viên xóa đơn khi chưa được duyệt
+    Route::delete('/xacnhansv/my-requests/{id}', [XacNhanSVController::class, 'destroy'])
+        ->name('xacnhansv.ctsv.destroy');
+
     // ===== ADMIN =====
     Route::prefix('xacnhansv/admin')->name('xacnhansv.ctsv.admin.')->group(function () {
         Route::get('/dashboard',               [CtsvAdminController::class, 'dashboard'])->name('dashboard');
@@ -32,7 +36,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/forms/{formid}',          [CtsvAdminController::class, 'updateForm'])->name('forms.update');
         Route::delete('/forms/{formid}',       [CtsvAdminController::class, 'destroyForm'])->name('forms.destroy');
         Route::get('/requests',                [CtsvAdminController::class, 'requests'])->name('requests');
-        Route::get('/requests/print-bulk',     [CtsvAdminController::class, 'printBulk'])->name('requests.print-bulk'); // ← THÊM DÒNG NÀY
+        Route::get('/requests/print-bulk',     [CtsvAdminController::class, 'printBulk'])->name('requests.print-bulk');
         Route::get('/requests/{id}',           [CtsvAdminController::class, 'showRequest'])->name('requests.show');
         Route::post('/requests/{id}/approve',  [CtsvAdminController::class, 'approveRequest'])->name('requests.approve');
         Route::post('/requests/{id}/reject',   [CtsvAdminController::class, 'rejectRequest'])->name('requests.reject');
