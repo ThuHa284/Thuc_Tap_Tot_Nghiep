@@ -39,6 +39,7 @@ class ThiTracNghiemController extends Controller
             'email' => $authUser->email,
             'classid' => $authUser->classid,
             'facultyid' => $authUser->facultyid,
+            'gid' => $authUser->gid,
         ];
     }
 
@@ -85,7 +86,13 @@ class ThiTracNghiemController extends Controller
     {
         $user = $this->getCurrentUser();
 
-        $quizzes = $quizDataService->getQuizList();
+        // Kiểm tra xem người dùng có phải admin không
+        $authUser = Auth::user();
+        if ($authUser && $authUser->isAdmin()) {
+            return view('thitracnghiem::admin_denied', compact('user'));
+        }
+
+        $quizzes = $quizDataService->getQuizList($user['gid'] ?? null);
 
         return view('thitracnghiem::quiz_list', compact('user', 'quizzes'));
     }
@@ -158,11 +165,56 @@ class ThiTracNghiemController extends Controller
     {
         $user = $this->getCurrentUser();
 
+        \Log::debug('=== QUIZ START DEBUG ===', [
+            'user' => $user,
+            'user_id' => $user['uid'] ?? 'NULL',
+            'quid' => $quid
+        ]);
+
         // Kiểm tra bài thi tồn tại
         $quiz = SavsoftQuiz::find($quid);
         if (!$quiz) {
             return redirect()->route('thitracnghiem.quiz.list')
                 ->with('error', 'Bài thi không tồn tại.');
+        }
+
+        // Kiểm tra xem bài thi đã hết hạn hay chưa
+        if ($quiz->end_date && $quiz->end_date !== '0000-00-00 00:00:00') {
+            $endDate = \Carbon\Carbon::parse($quiz->end_date);
+            if (now() > $endDate) {
+                return redirect()->route('thitracnghiem.quiz.list')
+                    ->with('error', 'Bài thi này đã hết hạn. Không thể làm bài.');
+            }
+        }
+
+        // === KIỂM TRA: Có bài thi khác đang chạy không ===
+        $sessionKey = 'current_quiz_' . $user['uid'];
+        $currentQuizId = session($sessionKey);
+
+        \Log::debug('Session Check', [
+            'session_key' => $sessionKey,
+            'current_quiz_id_from_session' => $currentQuizId,
+            'all_session_keys' => array_keys(session()->all()),
+            'requested_quid' => $quid
+        ]);
+
+        $currentQuizId = session('current_quiz_' . ($user['uid'] ?? ''));
+
+        if (!empty($currentQuizId) && (int)$currentQuizId !== (int)$quid) {
+
+            \Log::warning('BLOCKING - Different Quiz Running', [
+                'user_id' => $user['uid'] ?? null,
+                'current_quid' => $currentQuizId,
+                'requested_quid' => $quid
+            ]);
+
+            return redirect()
+                ->route('thitracnghiem.quiz.start', ['quid' => $currentQuizId])
+                ->with('swal_warning', [
+                    'icon' => 'warning',
+                    'title' => 'Bạn chưa nộp bài thi trước!',
+                    'text' => 'Bạn đang làm một bài thi khác. Vui lòng nộp bài đó trước.'
+                ]);
         }
 
         // Kiểm tra số lần làm bài tối đa
@@ -172,19 +224,15 @@ class ThiTracNghiemController extends Controller
 
         if ($attemptCount >= $quiz->maximum_attempts) {
             return redirect()->route('thitracnghiem.quiz.list')
-                ->with('error', "❌ Bạn đã hết số lần làm bài. Tối đa: {$quiz->maximum_attempts} lần");
+                ->with('error', " Bạn đã hết số lần làm bài. Tối đa: {$quiz->maximum_attempts} lần");
         }
 
         // Tính lần còn lại
         $remainingAttempts = $quiz->maximum_attempts - $attemptCount;
 
-        $currentQuiz = session('current_quiz_' . $user['uid']);
-        if ($currentQuiz && $currentQuiz != $quid) {
-            session()->forget('current_quiz_' . $user['uid']);
-        }
-
         // Lưu bài thi hiện tại
         session(['current_quiz_' . $user['uid'] => $quid]);
+        session()->save(); // Force save session immediately
 
         $sessionKey = "quiz_seed_" . ($user['uid'] ?? 0) . "_" . $quid;
         if (!session()->has($sessionKey)) {
@@ -193,6 +241,12 @@ class ThiTracNghiemController extends Controller
         $seed = session($sessionKey);
 
         $data = $quizDataService->getQuizDetailWithQuestionsAndAnswers($quid, $seed);
+
+        // Lấy thời gian thi từ group (valid_for_days), nếu không có thì dùng duration của quiz
+        $quizDuration = $quiz->duration ?? 40;
+        if ($quiz->group && $quiz->group->valid_for_days) {
+            $quizDuration = $quiz->group->valid_for_days;
+        }
 
         return view('thitracnghiem::quiz_start', [
             'user' => $user,
@@ -204,8 +258,9 @@ class ThiTracNghiemController extends Controller
             'remainingAttempts' => $remainingAttempts,
             'showWarning' => $remainingAttempts <= 2,
             'warningMessage' => $remainingAttempts == 1
-                ? "⚠️ Đây là lần cuối cùng! Bạn chỉ còn {$remainingAttempts} lần làm bài."
-                : "⚠️ Bạn còn {$remainingAttempts} lần làm bài.",
+                ? " Đây là lần cuối cùng! Bạn chỉ còn {$remainingAttempts} lần làm bài."
+                : " Bạn còn {$remainingAttempts} lần làm bài.",
+            'quizDuration' => $quizDuration,
         ]);
     }
 
@@ -272,6 +327,13 @@ class ThiTracNghiemController extends Controller
 
             session()->forget($sessionKey);
             session()->forget('current_quiz_' . $user['uid']);
+
+            \Log::info('Quiz Submitted - Session Cleared', [
+                'user_id' => $user['uid'],
+                'quid' => $quid,
+                'session_key' => $sessionKey,
+                'current_quiz_key' => 'current_quiz_' . $user['uid']
+            ]);
         }
 
         return view('thitracnghiem::result', [
@@ -288,6 +350,7 @@ class ThiTracNghiemController extends Controller
 
         $history = \Modules\ThiTracNghiem\Models\SavsoftResult::with('quiz')
             ->where('uid', $user['uid'])
+            ->orderBy('end_time', 'desc')
             ->get();
 
         return view('thitracnghiem::history', compact('user', 'history'));

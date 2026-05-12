@@ -93,11 +93,14 @@
     }
 </style>
 
-<div class="container-fluid py-2">
+<div class="container-fluid py-2"
+    data-quiz-id="{{ $quiz->quid }}"
+    data-quiz-duration="{{ $quizDuration ?? 40 }}"
+    data-total-questions="{{ count($questions) }}">
     @if(isset($showWarning) && $showWarning)
     <div class="alert alert-{{ $remainingAttempts == 1 ? 'danger' : 'warning' }} alert-dismissible fade show m-3" role="alert">
         <i class="bi bi-exclamation-triangle me-2"></i>
-        <strong>{{ $remainingAttempts == 1 ? '🚨 CẢNH BÁO:' : '⚠️ LƯU Ý:' }}</strong>
+        <strong>{{ $remainingAttempts == 1 ? ' CẢNH BÁO:' : ' LƯU Ý:' }}</strong>
         {!! $warningMessage !!}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -230,11 +233,8 @@
                     </div>
 
                     <div class="d-grid mt-4 gap-2">
-                        <button type="button" id="submit-btn-trigger" class="btn btn-success rounded-pill py-2 fw-bold shadow-sm">
+                        <button type="button" id="submit-btn-trigger" class="btn btn-success rounded-pill py-3 fw-bold shadow-sm border-0" style="font-size: 1.1rem; letter-spacing: 0.5px;">
                             <i class="bi bi-check-circle me-2"></i>Nộp bài thi
-                        </button>
-                        <button type="button" id="cancel-btn-trigger" class="btn btn-sm btn-outline-danger rounded-pill">
-                            <i class="bi bi-x-circle me-1"></i>Hủy làm bài
                         </button>
                     </div>
                 </div>
@@ -248,52 +248,59 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const totalQuestions = {{ count($questions) }};
+        // Get data from data attributes - NO BLADE SYNTAX IN JAVASCRIPT
+        const container = document.querySelector('[data-quiz-id]');
+        const quizId = parseInt(container.dataset.quizId);
+        const quizDuration = parseInt(container.dataset.quizDuration);
+        const totalQuestions = parseInt(container.dataset.totalQuestions);
+
         let currentIdx = 0;
 
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const submitBtnTrigger = document.getElementById('submit-btn-trigger');
-        const cancelBtnTrigger = document.getElementById('cancel-btn-trigger');
         const currentNumSpan = document.getElementById('current-question-num');
         const mapItems = document.querySelectorAll('.question-map-item');
         const questionBlocks = document.querySelectorAll('.question-block');
         const quizForm = document.getElementById('quiz-form');
 
-        const quizId = {{ $quiz->quid }};
+        // Validate required elements
+        if (!prevBtn || !nextBtn || !submitBtnTrigger || !quizForm || questionBlocks.length === 0) {
+            console.error('Missing required form elements. Quiz may not load correctly.');
+            console.log('prevBtn:', !!prevBtn, 'nextBtn:', !!nextBtn, 'submitBtnTrigger:', !!submitBtnTrigger, 'quizForm:', !!quizForm, 'questionBlocks:', questionBlocks.length);
+            return;
+        }
+
         const storageKey = `quiz_answers_${quizId}`;
         const timerKey = `quiz_timer_end_${quizId}`;
 
-        // Biến trạng thái để cho phép thoát trang khi nhấn nút xác nhận
         let isAllowingExit = false;
 
-        // ✅ YÊU CẦU 3: Hiển thị thông báo đẹp nếu đang có bài thi khác (từ session flash)
-        @if(session('swal_warning'))
-        Swal.fire({
-            icon: '{{ session("swal_warning.icon") }}',
-            title: '{{ session("swal_warning.title") }}',
-            text: '{{ session("swal_warning.text") }}',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'OK',
-            borderRadius: '15px'
-        });
-        @endif
-        // ✅ YÊU CẦU 3: Hiển thị thông báo đẹp nếu đang có bài thi khác (từ session flash)
-        @if(session('swal_warning'))
-        Swal.fire({
-            icon: '{{ session("swal_warning.icon") }}',
-            title: '{{ session("swal_warning.title") }}',
-            text: '{{ session("swal_warning.text") }}',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'OK',
-            borderRadius: '15px'
-        });
-        @endif
+        // Debug warning
+        console.log('Checking for swal_warning...');
+        const sawlWarningData = @json(session('swal_warning'));
+        console.log('swal_warning data:', sawlWarningData);
 
-        // ✅ THÊM ĐÂY: Hiển thị thông báo giới hạn lần làm bài
+        @if(session('swal_warning'))
+        console.log('Found swal_warning, showing alert');
+        Swal.fire({
+            icon: '{{ session("swal_warning.icon") }}',
+            title: '{{ session("swal_warning.title") }}',
+            text: '{{ session("swal_warning.text") }}',
+            confirmButtonColor: '#d9534f',
+            confirmButtonText: 'Quay lại',
+            borderRadius: '15px',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then(() => {
+            // Reload page để clear session
+            window.location.href = '{{ route("thitracnghiem.quiz.list") }}';
+        });
+        @else
+        console.log('No swal_warning found in session');
         @if(isset($showWarning) && $showWarning)
         Swal.fire({
-            title: '⚠️ {{ $remainingAttempts == 1 ? "Cảnh báo" : "Lưu ý" }}',
+            title: ' {{ $remainingAttempts == 1 ? "Cảnh báo" : "Lưu ý" }}',
             text: '{{ $warningMessage }}',
             icon: '{{ $remainingAttempts == 1 ? "warning" : "info" }}',
             confirmButtonColor: '#2563eb',
@@ -301,6 +308,8 @@
             borderRadius: '15px'
         });
         @endif
+        @endif
+
         // --- LOGIC ĐIỀU HƯỚNG CÂU HỎI ---
         function updateUI() {
             questionBlocks.forEach((block, idx) => {
@@ -405,9 +414,8 @@
             let icon = 'question';
 
             if (unanswered > 0) {
-                title = '⚠️ Bạn chưa hoàn thành bài thi!';
+                title = ' Bạn chưa hoàn thành bài thi!';
                 text = `Bạn vẫn còn ${unanswered} câu chưa chọn đáp án. Bạn vẫn muốn nộp bài chứ?`;
-                icon = 'warning';
             }
 
             Swal.fire({
@@ -417,8 +425,8 @@
                 showCancelButton: true,
                 confirmButtonColor: '#2563eb',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: '✅ Đồng ý nộp bài',
-                cancelButtonText: '❌ Kiểm tra lại',
+                confirmButtonText: ' Đồng ý nộp bài',
+                cancelButtonText: ' Kiểm tra lại',
                 borderRadius: '15px',
                 backdrop: true
             }).then((result) => {
@@ -430,40 +438,31 @@
             });
         });
 
-        cancelBtnTrigger.addEventListener('click', function() {
-            Swal.fire({
-                title: '❌ Hủy làm bài?',
-                text: "Kết quả bài thi này sẽ không được lưu lại và các đáp án đã chọn sẽ bị xóa. Bạn có chắc chắn muốn thoát?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Thoát và hủy bài',
-                cancelButtonText: 'Tiếp tục làm bài',
-                borderRadius: '15px',
-                backdrop: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    isAllowingExit = true;
-                    clearStorages();
-                    window.location.href = "{{ route('thitracnghiem.quiz.show', ['quid' => $quiz->quid]) }}";
-                }
-            });
-        });
-
         quizForm.addEventListener('change', saveAnswers);
 
         // --- LOGIC ĐỒNG HỒ ĐẾM NGƯỢC (TIMER) ---
-        const quizDurationSeconds = ({{ $quiz->duration ?? 40 }}) * 60;
-        let endTime = localStorage.getItem(timerKey);
+        const quizDurationSeconds = quizDuration * 60;
+        let endTime = null;
 
-        if (!endTime) {
+        try {
+            endTime = localStorage.getItem(timerKey);
+            if (!endTime) {
+                endTime = Date.now() + (quizDurationSeconds * 1000);
+                localStorage.setItem(timerKey, endTime);
+            } else {
+                endTime = parseInt(endTime);
+            }
+        } catch (e) {
+            console.warn('localStorage not available, using in-memory timer:', e.message);
             endTime = Date.now() + (quizDurationSeconds * 1000);
-            localStorage.setItem(timerKey, endTime);
         }
 
         function startTimer() {
             const timerDisplay = document.getElementById('timer-display');
+            if (!timerDisplay) {
+                console.error('Timer display element not found');
+                return;
+            }
 
             const interval = setInterval(() => {
                 const now = Date.now();
@@ -474,7 +473,7 @@
                     timerDisplay.innerText = "00:00";
 
                     Swal.fire({
-                        title: '⏰ Hết giờ làm bài!',
+                        title: ' Hết giờ làm bài!',
                         text: 'Hệ thống đang tự động nộp bài của bạn.',
                         icon: 'info',
                         timer: 3000,
@@ -505,7 +504,6 @@
             }, 1000);
         }
 
-        // Thêm hiệu ứng nhấp nháy cho timer
         const style = document.createElement('style');
         style.textContent = `
         @keyframes pulse {
@@ -521,7 +519,6 @@
             clearStorages();
         });
 
-
         window.addEventListener('beforeunload', function(e) {
             if (!isAllowingExit) {
                 e.preventDefault();
@@ -529,11 +526,9 @@
             }
         });
 
-
         if (performance.navigation.type === 1) {
             Swal.fire({
-                icon: 'warning',
-                title: '⚠️ Bạn đã rời khỏi bài thi!',
+                title: ' Bạn đã rời khỏi bài thi!',
                 text: 'Bài thi chưa được hoàn thành và sẽ không được ghi nhận kết quả.',
                 confirmButtonColor: '#d33',
                 confirmButtonText: 'Đã hiểu',
@@ -543,7 +538,6 @@
             });
         }
 
-        // --- KHỞI TẠO ---
         loadAnswers();
         updateUI();
         startTimer();

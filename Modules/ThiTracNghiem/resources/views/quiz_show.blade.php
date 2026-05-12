@@ -4,8 +4,10 @@
 
 @section('content')
 <style>
-    .main { padding-top: 20px !important; }
-    
+    .main {
+        padding-top: 20px !important;
+    }
+
     .detail-card {
         border-radius: 20px;
         border: none;
@@ -35,7 +37,7 @@
 
     .info-box:hover {
         background-color: #ffffff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         border-color: #2563eb;
     }
 
@@ -79,8 +81,15 @@
     }
 
     @keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 </style>
 
@@ -158,9 +167,19 @@
             </div>
 
             <div class="d-grid gap-3 d-md-flex justify-content-center pt-2">
+                @php
+                $isExpired = $quiz->end_date && $quiz->end_date !== '0000-00-00 00:00:00' && now() > \Carbon\Carbon::parse($quiz->end_date);
+                @endphp
+
+                @if($isExpired)
+                <button class="btn btn-danger btn-start px-5 shadow-sm border-0 text-white" disabled>
+                    <i class="bi bi-calendar-x me-2"></i> Bài thi đã hết hạn
+                </button>
+                @else
                 <a href="{{ route('thitracnghiem.quiz.start', ['quid' => $quiz->quid]) }}" class="btn btn-success btn-start px-5 shadow-sm border-0 text-white">
                     <i class="bi bi-play-circle me-2"></i> Bắt đầu làm bài ngay
                 </a>
+                @endif
             </div>
         </div>
     </div>
