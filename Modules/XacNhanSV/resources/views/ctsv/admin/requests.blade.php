@@ -107,13 +107,13 @@
                         <td class="text-muted small">#{{ $s->id }}</td>
                         <td>
                             <div class="fw-semibold small">
-                                {{ $s->user ? $s->user->first_name.' '.$s->user->last_name : '—' }}
+                                {{ $s->user ? $s->user->last_name.' '.$s->user->first_name : '—' }}
                             </div>
                             <div class="text-muted" style="font-size:11px">{{ $s->studentid }}</div>
                         </td>
                         <td class="small">{{ $s->form->name ?? '—' }}</td>
                         <td class="small text-muted">
-                            {{ $s->created_at ? $s->created_at->format('d/m/Y H:i') : '—' }}
+                            {{ $s->created_at ? $s->created_at->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : '—' }}
                         </td>
                         <td class="small">
                             @switch($s->get_at)

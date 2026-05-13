@@ -73,7 +73,7 @@
                         <td class="text-muted small">#{{ $s->id }}</td>
                         <td>
                             <div class="fw-semibold small">
-                                {{ $s->user ? $s->user->first_name.' '.$s->user->last_name : $s->studentid }}
+                                {{ $s->user ? $s->user->last_name.' '.$s->user->first_name : $s->studentid }}
                             </div>
                             <div class="text-muted" style="font-size:11px">{{ $s->studentid }}</div>
                         </td>

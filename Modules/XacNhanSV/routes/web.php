@@ -22,6 +22,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/xacnhansv/my-requests/{id}', [XacNhanSVController::class, 'show'])
         ->name('xacnhansv.ctsv.my-requests.show');
 
+    // ✅ THÊM: Sinh viên xóa đơn khi chưa được duyệt
+    Route::delete('/xacnhansv/my-requests/{id}', [XacNhanSVController::class, 'destroy'])
+        ->name('xacnhansv.ctsv.destroy');
+
     // ===== ADMIN =====
     Route::prefix('xacnhansv/admin')->name('xacnhansv.ctsv.admin.')->group(function () {
         Route::get('/dashboard',               [CtsvAdminController::class, 'dashboard'])->name('dashboard');

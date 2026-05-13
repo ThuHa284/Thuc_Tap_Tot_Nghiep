@@ -14,6 +14,17 @@
     ];
     $rawKhoa = $d['khoa'] ?? $submission->user->facultyid ?? '';
     $khoaTen = $khoaMap[strtolower($rawKhoa)] ?? $rawKhoa;
+
+    // ✅ Fallback ngày sinh từ DB nếu data lưu trống
+    $dobNgay  = $d['ngay_sinh'] ?? '';
+    $dobThang = $d['thang_sinh'] ?? '';
+    $dobNam   = $d['nam_sinh'] ?? '';
+    if ((!$dobNgay || !$dobThang || !$dobNam) && ($submission->user->birthdate ?? null)) {
+        $dob      = \Carbon\Carbon::parse($submission->user->birthdate);
+        $dobNgay  = $dobNgay  ?: $dob->format('d');
+        $dobThang = $dobThang ?: $dob->format('m');
+        $dobNam   = $dobNam   ?: $dob->format('Y');
+    }
 @endphp
 
 <div class="container py-4" style="max-width:860px">
@@ -47,16 +58,17 @@
 
         <p class="mb-1">
             Sinh viên: <span class="border-bottom px-1" style="min-width:220px;display:inline-block">
-                {{ $d['ho_ten'] ?? ($submission->user->first_name.' '.$submission->user->last_name) }}
+                {{ $d['ho_ten'] ?? ($submission->user->last_name.' '.$submission->user->first_name) }}
             </span>
             &nbsp;&nbsp; Giới tính: <strong>{{ $d['gioi_tinh'] ?? 'Nam' }}</strong>
         </p>
 
+        {{-- ✅ Ngày sinh với fallback từ DB --}}
         <p class="mb-1">
             Sinh ngày:
-            <span class="border-bottom px-1">{{ $d['ngay_sinh'] ?? '___' }}</span>
-            tháng <span class="border-bottom px-1">{{ $d['thang_sinh'] ?? '___' }}</span>
-            năm <span class="border-bottom px-1">{{ $d['nam_sinh'] ?? '___' }}</span>
+            <span class="border-bottom px-1">{{ $dobNgay ?: '___' }}</span>
+            tháng <span class="border-bottom px-1">{{ $dobThang ?: '___' }}</span>
+            năm <span class="border-bottom px-1">{{ $dobNam ?: '___' }}</span>
         </p>
 
         <p class="mb-1">
@@ -85,7 +97,7 @@
         <p class="mb-3 mt-2">
             Từ ngày: <span class="border-bottom px-1">{{ ($d['tu_ngay_d']??'__').'/'.($d['tu_ngay_m']??'__').'/'.($d['tu_ngay_y']??'____') }}</span>
             &nbsp; đến ngày: <span class="border-bottom px-1">{{ ($d['den_ngay_d']??'__').'/'.($d['den_ngay_m']??'__').'/'.($d['den_ngay_y']??'____') }}</span>,
-            sinh viên <strong>{{ $submission->user->first_name }} {{ $submission->user->last_name }}</strong>
+            sinh viên <strong>{{ $submission->user->last_name }} {{ $submission->user->first_name }}</strong>
             <span class="fw-bold">KHÔNG bị xử phạt hành chính</span>
             về các hành vi: cờ bạc, nghiện hút, trộm cắp, buôn lậu và các hành vi vi phạm pháp luật khác.
         </p>
@@ -112,11 +124,16 @@
                     năm <span class="border-bottom px-1">{{ $d['nam_ky'] ?? date('Y') }}</span>
                 </p>
                 <p class="fw-bold mb-0">Người làm đơn</p><br><br><br>
-                <p>{{ $submission->user->first_name }} {{ $submission->user->last_name }}</p>
+                <p>{{ $submission->user->last_name }} {{ $submission->user->first_name }}</p>
             </div>
             <div class="text-center" style="width:40%">
-                <p class="fw-bold mb-0">TRƯỞNG PHÒNG CTSV</p><br><br><br>
+                {{-- ✅ Chữ ký động --}}
+                <p class="fw-bold mb-0">{{ strtoupper($submission->form->signtitle ?? 'TRƯỞNG PHÒNG CTSV') }}</p>
+                <br><br><br>
                 <p>(Ký, ghi rõ họ tên, đóng dấu)</p>
+                @if($submission->form->signname ?? null)
+                    <p>{{ $submission->form->signname }}</p>
+                @endif
             </div>
         </div>
     </div>

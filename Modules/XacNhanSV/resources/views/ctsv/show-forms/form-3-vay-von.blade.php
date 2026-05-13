@@ -35,7 +35,7 @@
         </div>
 
         <p class="mb-1">Họ và tên: <span class="border-bottom px-1" style="min-width:220px;display:inline-block">
-            {{ $d['ho_ten'] ?? ($submission->user->first_name.' '.$submission->user->last_name) }}
+           {{ $d['ho_ten'] ?? ($submission->user->last_name.' '.$submission->user->first_name) }}
         </span></p>
 
         <p class="mb-1">
