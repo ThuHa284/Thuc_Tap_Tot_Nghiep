@@ -4,6 +4,7 @@ namespace Modules\KhaiBaoNgoaiTru\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Modules\KhaiBaoNgoaiTru\app\Http\Middleware\SinhVienMiddleware;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,9 @@ class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // Đăng ký middleware cho module
+        Route::aliasMiddleware('sinh_vien', SinhVienMiddleware::class);
     }
 
     /**

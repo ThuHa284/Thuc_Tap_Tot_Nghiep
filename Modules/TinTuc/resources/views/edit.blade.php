@@ -74,49 +74,6 @@
                                 <label for="date1"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày diễn ra</label>
                             </div>
 
-                            {{-- Chi hien thi khi co query param type=khai_bao HOAC tin tuc da co khai bao tu truoc --}}
-                            @if(request('type') === 'khai_bao' || $tinTuc->is_khai_bao_noi_tru)
-                            <div class="card border-0 bg-light rounded-3 p-3 mt-3" id="khai_bao_section">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <label class="form-label fw-bold mb-0">
-                                        <i class="fas fa-door-open me-2 text-muted"></i>Kỳ khai báo nội trú
-                                    </label>
-                                    <div class="form-check form-switch m-0">
-                                        <input class="form-check-input" type="checkbox" role="switch" name="is_khai_bao_noi_tru" id="is_khai_bao_noi_tru" value="1" {{ old('is_khai_bao_noi_tru', $tinTuc->is_khai_bao_noi_tru) ? 'checked' : '' }}>
-                                        <label class="form-check-label small text-muted" for="is_khai_bao_noi_tru">Bật</label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small text-muted mb-1" for="khai_bao_ky">Chọn kỳ</label>
-                                    <select name="khai_bao_ky" id="khai_bao_ky" class="form-select rounded-3 @error('khai_bao_ky') is-invalid @enderror">
-                                        <option value="">-- Chọn kỳ --</option>
-                                        <option value="1" {{ old('khai_bao_ky', $tinTuc->khai_bao_ky) == '1' ? 'selected' : '' }}>Kỳ 1</option>
-                                        <option value="2" {{ old('khai_bao_ky', $tinTuc->khai_bao_ky) == '2' ? 'selected' : '' }}>Kỳ 2</option>
-                                    </select>
-                                    @error('khai_bao_ky')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted mb-1" for="khai_bao_start_at">Bắt đầu</label>
-                                        <input type="datetime-local" name="khai_bao_start_at" id="khai_bao_start_at" class="form-control rounded-3 @error('khai_bao_start_at') is-invalid @enderror" value="{{ old('khai_bao_start_at', $tinTuc->khai_bao_start_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_start_at)->format('Y-m-d\TH:i') : '') }}">
-                                        @error('khai_bao_start_at')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted mb-1" for="khai_bao_end_at">Kết thúc</label>
-                                        <input type="datetime-local" name="khai_bao_end_at" id="khai_bao_end_at" class="form-control rounded-3 @error('khai_bao_end_at') is-invalid @enderror" value="{{ old('khai_bao_end_at', $tinTuc->khai_bao_end_at ? \Carbon\Carbon::parse($tinTuc->khai_bao_end_at)->format('Y-m-d\TH:i') : '') }}">
-                                        @error('khai_bao_end_at')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <small class="text-muted mt-2 d-block">Bài viết sẽ hiện nút khai báo tại đây khi nằm trong khung thời gian này.</small>
-                            </div>
-                            @endif
-
                             <div class="card border-0 bg-light rounded-3 p-3 mt-3">
                                 <label class="form-label fw-bold mb-3">
                                     <i class="fas fa-paperclip me-2 text-muted"></i>Tệp đính kèm
@@ -276,51 +233,4 @@ function addExtraAttachment(existing = {}) {
     container.appendChild(wrapper);
 }
 </script>
-
-<script>
-const usedDeclarationSemesters = JSON.parse(document.getElementById('usedDeclarationSemestersData')?.textContent || '{}');
-
-function getYearFromDeclarationStart() {
-    const value = document.getElementById('khai_bao_start_at')?.value;
-    return value ? value.substring(0, 4) : null;
-}
-
-function syncSemesterOptions() {
-    const year = getYearFromDeclarationStart();
-    const semesterSelect = document.getElementById('khai_bao_ky');
-    if (!semesterSelect) return;
-
-    Array.from(semesterSelect.options).forEach(option => {
-        if (!option.value) {
-            option.disabled = false;
-            return;
-        }
-
-        const usedSemesters = year ? (usedDeclarationSemesters[year] || []) : [];
-        const currentValue = semesterSelect.value;
-        const isCurrentSelection = currentValue && currentValue === option.value;
-        option.disabled = usedSemesters.includes(Number(option.value)) && !isCurrentSelection;
-    });
-}
-
-// Neu co query param type=khai_bao, tu dong bat checkbox va set required
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('type') === 'khai_bao') {
-        const checkbox = document.getElementById('is_khai_bao_noi_tru');
-        if (checkbox) {
-            checkbox.checked = true;
-        }
-        const kySelect = document.getElementById('khai_bao_ky');
-        if (kySelect) {
-            kySelect.setAttribute('required', 'required');
-        }
-    }
-    syncSemesterOptions();
-});
-
-document.getElementById('khai_bao_start_at')?.addEventListener('change', syncSemesterOptions);
-</script>
-
-<script type="application/json" id="usedDeclarationSemestersData"><?php echo json_encode($usedDeclarationSemesters ?? []); ?></script>
 @endsection

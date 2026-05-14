@@ -29,6 +29,8 @@ class TinTuc extends Model
         'khai_bao_ky',
         'khai_bao_start_at',
         'khai_bao_end_at',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [

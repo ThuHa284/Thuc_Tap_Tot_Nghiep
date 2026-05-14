@@ -68,49 +68,6 @@
                                 <input type="date" name="date1" class="form-control rounded-3 border-0 shadow-sm" id="date1" value="{{ old('date1') }}">
                                 <label for="date1"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày diễn ra (nếu có)</label>
                             </div>
-
-                            {{-- Chi hien thi khi co query param type=khai_bao --}}
-                            @if(request('type') === 'khai_bao')
-                            <div class="card border-0 bg-light rounded-3 p-3 mt-3" id="khai_bao_section">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <label class="form-label fw-bold mb-0">
-                                        <i class="fas fa-door-open me-2 text-muted"></i>Kỳ khai báo nội trú
-                                    </label>
-                                    <div class="form-check form-switch m-0">
-                                        <input class="form-check-input" type="checkbox" role="switch" name="is_khai_bao_noi_tru" id="is_khai_bao_noi_tru" value="1" {{ old('is_khai_bao_noi_tru') ? 'checked' : '' }}>
-                                        <label class="form-check-label small text-muted" for="is_khai_bao_noi_tru">Bật</label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small text-muted mb-1" for="khai_bao_ky">Chọn kỳ</label>
-                                    <select name="khai_bao_ky" id="khai_bao_ky" class="form-select rounded-3 @error('khai_bao_ky') is-invalid @enderror">
-                                        <option value="">-- Chọn kỳ --</option>
-                                        <option value="1" {{ old('khai_bao_ky') == '1' ? 'selected' : '' }}>Kỳ 1</option>
-                                        <option value="2" {{ old('khai_bao_ky') == '2' ? 'selected' : '' }}>Kỳ 2</option>
-                                    </select>
-                                    @error('khai_bao_ky')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted mb-1" for="khai_bao_start_at">Bắt đầu</label>
-                                        <input type="datetime-local" name="khai_bao_start_at" id="khai_bao_start_at" class="form-control rounded-3 @error('khai_bao_start_at') is-invalid @enderror" value="{{ old('khai_bao_start_at') }}">
-                                        @error('khai_bao_start_at')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted mb-1" for="khai_bao_end_at">Kết thúc</label>
-                                        <input type="datetime-local" name="khai_bao_end_at" id="khai_bao_end_at" class="form-control rounded-3 @error('khai_bao_end_at') is-invalid @enderror" value="{{ old('khai_bao_end_at') }}">
-                                        @error('khai_bao_end_at')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <small class="text-muted mt-2 d-block">Bài viết sẽ hiện nút khai báo khi nằm trong khung thời gian này.</small>
-                            </div>
-                            @endif
                         </div>
                         
                         <div class="col-md-4">
@@ -284,7 +241,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.getElementById('khai_bao_start_at')?.addEventListener('change', syncSemesterOptions);
-</script>
-
-<script type="application/json" id="usedDeclarationSemestersData"><?php echo json_encode($usedDeclarationSemesters ?? []); ?></script>
 @endsection

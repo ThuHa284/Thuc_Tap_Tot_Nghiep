@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
-use Illuminate\Validation\ValidationException;
 use Modules\TinTuc\Models\TinTuc as ModelsTinTuc;
 use Modules\TinTuc\Models\LoaiTin as ModelsLoaiTin;
 
@@ -29,10 +28,122 @@ class TinTucController extends Controller
         $query = ModelsTinTuc::with('loaitin')->orderBy('created_at', 'desc');
 
         if($request->has('search') && $request->search !=''){
-            $query->where('title','like','%'.$request->search.'%');
+            $search = $request->search;
+
+            // Chuẩn hóa Unicode về NFC
+            $search = $this->normalizeUnicode($search);
+            $searchNormalized = $this->normalizeSearch($search);
+
+            // Kiểm tra xem search có dấu tiếng Việt không
+            $hasDiacritics = $this->hasDiacritics($search);
+
+            // Tìm kiếm: khớp từ bắt đầu
+            $allTin = $query->get();
+            $filtered = $allTin->filter(function($item) use ($search, $searchNormalized, $hasDiacritics) {
+                $title = $this->normalizeUnicode($item->title ?? '');
+                $titleNormalized = $this->normalizeSearch($title);
+
+                if ($hasDiacritics) {
+                    // Có dấu → chỉ tìm theo có dấu
+                    return $this->startsWith($title, $search);
+                } else {
+                    // Không dấu → tìm theo không dấu
+                    return $this->startsWith($titleNormalized, $searchNormalized);
+                }
+            });
+
+            // Tạo paginator thủ công
+            $perPage = 6;
+            $currentPage = $request->get('page', 1);
+            $pagedData = $filtered->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $danhSachTin = new \Illuminate\Pagination\LengthAwarePaginator(
+                $pagedData,
+                $filtered->count(),
+                $perPage,
+                $currentPage,
+                ['path' => url()->current(), 'query' => $request->query()]
+            );
+
+            return view('tintuc::index', compact('danhSachTin'));
         }
-        $danhSachTin = $query->get();
+
+        $danhSachTin = $query->paginate(6)->withQueryString();
         return view('tintuc::index', compact('danhSachTin'));
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có chứa dấu tiếng Việt không
+     */
+    private function hasDiacritics($str) {
+        $diacritics = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
+        $str = mb_strtolower($str, 'UTF-8');
+
+        for ($i = 0; $i < mb_strlen($str, 'UTF-8'); $i++) {
+            $char = mb_substr($str, $i, 1, 'UTF-8');
+            if (strpos($diacritics, $char) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra xem chuỗi có chứa từ bắt đầu bằng $prefix không
+     */
+    private function startsWith($str, $prefix) {
+        $str = mb_strtolower($str, 'UTF-8');
+        $prefix = mb_strtolower($prefix, 'UTF-8');
+
+        // Tách chuỗi thành các từ (theo khoảng trắng)
+        $words = preg_split('/\s+/u', $str, -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($words as $word) {
+            if (strpos($word, $prefix) === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Chuẩn hóa Unicode về dạng NFC (Normalization Form Composed)
+     */
+    private function normalizeUnicode($str) {
+        if (function_exists('normalizer_normalize')) {
+            return normalizer_normalize($str, \Normalizer::FORM_C) ?: $str;
+        }
+        return $str;
+    }
+
+    /**
+     * Bỏ dấu tiếng Việt
+     */
+    private function normalizeSearch($str) {
+        $str = mb_strtolower($str, 'UTF-8');
+
+        $map = [
+            'à','á','ạ','ả','ã','â','ầ','ấ','ậ','ẩ','ẫ','ă','ằ','ắ','ặ','ẳ','ẵ',
+            'è','é','ẹ','ẻ','ẽ','ê','ề','ế','ệ','ể','ễ',
+            'ì','í','ị','ỉ','ĩ',
+            'ò','ó','ọ','ỏ','õ','ô','ồ','ố','ộ','ổ','ỗ','ơ','ờ','ớ','ợ','ở','ỡ',
+            'ù','ú','ụ','ủ','ũ','ư','ừ','ứ','ự','ử','ữ',
+            'ỳ','ý','ỵ','ỷ','ỹ',
+            'đ'
+        ];
+
+        $replace = array_merge(
+            array_fill(0, 17, 'a'),
+            array_fill(0, 11, 'e'),
+            array_fill(0, 5, 'i'),
+            array_fill(0, 17, 'o'),
+            array_fill(0, 11, 'u'),
+            array_fill(0, 5, 'y'),
+            ['d']
+        );
+
+        $str = str_replace($map, $replace, $str);
+
+        return $str;
     }
 
     /**
@@ -42,8 +153,7 @@ class TinTucController extends Controller
     {
         $this->checkAdmin();
         $loaiTins = ModelsLoaiTin::all();
-        $usedDeclarationSemesters = $this->getUsedDeclarationSemesters();
-        return view('tintuc::create', compact('loaiTins', 'usedDeclarationSemesters'));
+        return view('tintuc::create', compact('loaiTins'));
     }
 
     /**
@@ -62,14 +172,9 @@ class TinTucController extends Controller
             'extra_attachments.*.label' => 'nullable|string|max:255',
             'extra_attachments.*.existing_path' => 'nullable|string',
             'extra_attachments.*.existing_name' => 'nullable|string|max:255',
-            'extra_attachments.*.file' => 'nullable|file|mimes:pdf,xls,xlsx,csv,doc,docx|max:10240',
-            'is_khai_bao_noi_tru' => 'nullable|boolean',
-            'khai_bao_ky' => 'required_if:is_khai_bao_noi_tru,1|nullable|in:1,2',
-            'khai_bao_start_at' => 'required_if:is_khai_bao_noi_tru,1|nullable|date',
-            'khai_bao_end_at' => 'required_if:is_khai_bao_noi_tru,1|nullable|date|after_or_equal:khai_bao_start_at'
+            'extra_attachments.*.file' => 'nullable|file|mimes:pdf,xls,xlsx,csv,doc,docx|max:10240'
         ]);
         $data = $request->all();
-        $data['is_khai_bao_noi_tru'] = $request->boolean('is_khai_bao_noi_tru');
         $data['attachment_label'] = $request->input('attachment_label');
         $data['attachments'] = [];
 
@@ -117,19 +222,9 @@ class TinTucController extends Controller
 
         $data['attachments'] = $extraAttachments;
 
-        if ($data['is_khai_bao_noi_tru']) {
-            $this->ensureDeclarationSemesterIsAvailable(
-                $data['khai_bao_start_at'] ?? null,
-                $data['khai_bao_ky'] ?? null
-            );
-        } else {
-            $data['khai_bao_ky'] = null;
-        }
-
-        if (!$data['is_khai_bao_noi_tru']) {
-            $data['khai_bao_start_at'] = null;
-            $data['khai_bao_end_at'] = null;
-        }
+        // Thêm thời gian tạo thực
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
 
         ModelsTinTuc::create($data);
         return redirect()->route('tintuc.index')->with('success','Thêm tin tức thành công');
@@ -154,9 +249,13 @@ class TinTucController extends Controller
     {
         $this->checkAdmin();
         $tinTuc = ModelsTinTuc::findOrFail($id);
+
+        if ($tinTuc->is_khai_bao_noi_tru) {
+            return redirect()->route('khai_bao_ngoai_tru.ky_edit', $id);
+        }
+
         $loaiTins = ModelsLoaiTin::all();
-        $usedDeclarationSemesters = $this->getUsedDeclarationSemesters($tinTuc->id);
-        return view('tintuc::edit', compact('tinTuc', 'loaiTins', 'usedDeclarationSemesters'));
+        return view('tintuc::edit', compact('tinTuc', 'loaiTins'));
     }
 
     /**
@@ -175,16 +274,11 @@ class TinTucController extends Controller
             'extra_attachments.*.label' => 'nullable|string|max:255',
             'extra_attachments.*.existing_path' => 'nullable|string',
             'extra_attachments.*.existing_name' => 'nullable|string|max:255',
-            'extra_attachments.*.file' => 'nullable|file|mimes:pdf,xls,xlsx,csv,doc,docx|max:10240',
-            'is_khai_bao_noi_tru' => 'nullable|boolean',
-            'khai_bao_ky' => 'required_if:is_khai_bao_noi_tru,1|nullable|in:1,2',
-            'khai_bao_start_at' => 'required_if:is_khai_bao_noi_tru,1|nullable|date',
-            'khai_bao_end_at' => 'required_if:is_khai_bao_noi_tru,1|nullable|date|after_or_equal:khai_bao_start_at'
+            'extra_attachments.*.file' => 'nullable|file|mimes:pdf,xls,xlsx,csv,doc,docx|max:10240'
         ]);
 
         $tinTuc = ModelsTinTuc::findOrFail($id);
         $data = $request->all();
-        $data['is_khai_bao_noi_tru'] = $request->boolean('is_khai_bao_noi_tru');
         $data['attachment_label'] = $request->input('attachment_label');
         $data['attachments'] = [];
 
@@ -254,20 +348,8 @@ class TinTucController extends Controller
 
         $data['attachments'] = $extraAttachments;
 
-        if ($data['is_khai_bao_noi_tru']) {
-            $this->ensureDeclarationSemesterIsAvailable(
-                $data['khai_bao_start_at'] ?? null,
-                $data['khai_bao_ky'] ?? null,
-                $tinTuc->id
-            );
-        } else {
-            $data['khai_bao_ky'] = null;
-        }
-
-        if (!$data['is_khai_bao_noi_tru']) {
-            $data['khai_bao_start_at'] = null;
-            $data['khai_bao_end_at'] = null;
-        }
+        // Cập nhật thời gian
+        $data['updated_at'] = now();
 
         $tinTuc->update($data);
 
@@ -363,54 +445,5 @@ class TinTucController extends Controller
             'Content-Type' => 'application/octet-stream',
             'Content-Disposition' => "attachment; filename*=UTF-8''{$encodedFileName}",
         ]);
-    }
-
-    private function getUsedDeclarationSemesters(?int $ignoreId = null): array
-    {
-        $query = ModelsTinTuc::query()
-            ->where('is_khai_bao_noi_tru', true)
-            ->whereNotNull('khai_bao_start_at')
-            ->whereNotNull('khai_bao_ky');
-
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
-
-        $used = [];
-
-        foreach ($query->get(['id', 'khai_bao_start_at', 'khai_bao_ky']) as $tinTuc) {
-            $year = optional($tinTuc->khai_bao_start_at)->year;
-            if (!$year) {
-                continue;
-            }
-
-            $used[$year][] = (int) $tinTuc->khai_bao_ky;
-        }
-
-        return $used;
-    }
-
-    private function ensureDeclarationSemesterIsAvailable($startAt, $semester, ?int $ignoreId = null): void
-    {
-        if (empty($startAt) || empty($semester)) {
-            return;
-        }
-
-        $year = \Carbon\Carbon::parse($startAt)->year;
-
-        $query = ModelsTinTuc::query()
-            ->where('is_khai_bao_noi_tru', true)
-            ->whereYear('khai_bao_start_at', $year)
-            ->where('khai_bao_ky', (int) $semester);
-
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
-
-        if ($query->exists()) {
-            throw ValidationException::withMessages([
-                'khai_bao_ky' => 'Kỳ này trong năm đã được khai báo nội trú rồi.',
-            ]);
-        }
     }
 }
