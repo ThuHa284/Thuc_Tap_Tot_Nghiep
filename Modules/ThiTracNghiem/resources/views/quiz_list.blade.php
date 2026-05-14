@@ -108,7 +108,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark section-title">Danh sách đề thi</h2>
-            <p class="text-muted">Chọn một bài thi để xem thông tin và bắt đầu làm bài</p>
+            <!-- <p class="text-muted">Chọn một bài thi để xem thông tin và bắt đầu làm bài</p> -->
         </div>
         <a href="{{ route('thitracnghiem.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
             <i class="bi bi-arrow-left me-1"></i> Quay lại
@@ -118,13 +118,22 @@
     @if(isset($quizzes) && count($quizzes))
     <div class="row g-4">
         @foreach($quizzes as $index => $quiz)
+        @php
+        $isExpired = $quiz->end_date && $quiz->end_date !== '0000-00-00 00:00:00' && now() > \Carbon\Carbon::parse($quiz->end_date);
+        @endphp
         <div class="col-md-6 col-lg-4 animate-card" style="animation-delay: {{ $index * 0.1 }}s">
-            <div class="card shadow-sm quiz-card h-100 position-relative">
+            <div class="card shadow-sm quiz-card h-100 position-relative {{ $isExpired ? 'opacity-75' : '' }}">
+                @if($isExpired)
+                <span class="badge bg-danger quiz-badge rounded-pill px-3 py-2 shadow-sm">
+                    <i class="bi bi-calendar-x me-1"></i> Hết hạn
+                </span>
+                @else
                 <span class="badge bg-primary quiz-badge rounded-pill px-3 py-2 shadow-sm">
                     <i class="bi bi-clock me-1"></i> {{ $quiz->duration ?? 0 }} Phút
                 </span>
+                @endif
 
-                <div class="quiz-icon-box">
+                <div class="quiz-icon-box {{ $isExpired ? 'opacity-50' : '' }}">
                     <i class="bi bi-journal-check"></i>
                 </div>
 
@@ -142,12 +151,24 @@
                             <i class="bi bi-clipboard-pulse me-2"></i>
                             <span>Số lần thi tối đa: {{ $quiz->maximum_attempts ?? 1 }} lần</span>
                         </div>
+                        @if($isExpired)
+                        <div class="d-flex align-items-center text-danger small fw-bold">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <span>Bài thi đã hết hạn</span>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="d-grid mt-auto">
+                        @if($isExpired)
+                        <button class="btn btn-outline-danger btn-view" disabled>
+                            Hết hạn <i class="bi bi-lock ms-1"></i>
+                        </button>
+                        @else
                         <a href="{{ route('thitracnghiem.quiz.show', ['quid' => $quiz->quid]) }}" class="btn btn-outline-primary btn-view">
                             Chi tiết <i class="bi bi-chevron-right ms-1"></i>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>

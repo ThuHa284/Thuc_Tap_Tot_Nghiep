@@ -28,12 +28,13 @@
 
 <script>
     let lastSentCode = "";
-    let isProcessing = false; // Cờ chặn việc gửi trùng lặp khi đang xử lý
+    let isProcessing = false;
+
     function playSound(type) {
         const sounds = {
-            'success': 'https://www.soundjay.com/buttons/beep-07.wav',
-            'error': 'https://www.soundjay.com/buttons/beep-03.wav',
-            'info': 'https://www.soundjay.com/buttons/beep-09.wav'
+            success: 'https://www.soundjay.com/buttons/beep-07.wav',
+            error: 'https://www.soundjay.com/buttons/beep-03.wav',
+            info: 'https://www.soundjay.com/buttons/beep-09.wav'
         };
         new Audio(sounds[type]).play().catch(() => {});
     }
@@ -44,70 +45,64 @@
 
         let resultDiv = document.getElementById('scan-result');
         resultDiv.innerHTML = `<span class="spinner-border spinner-border-sm text-primary"></span> Đang lưu dữ liệu...`;
-        resultDiv.className = "text-primary mt-3";
+        resultDiv.className = 'text-primary mt-3';
 
         fetch("{{ route('diemdanh.save') }}", {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}"
             },
             body: JSON.stringify({ qr_code: code })
         })
         .then(response => response.json())
         .then(data => {
-            if(data.status === 'success') {
+            if (data.status === 'success') {
                 playSound('success');
-                resultDiv.innerHTML = `✅ Đã lưu: <strong>${data.student_name}</strong> thành công!`;
-                resultDiv.className = "text-success fw-bold mt-3";
+                resultDiv.innerHTML = `Đã lưu: <strong>${data.student_name}</strong> thành công!`;
+                resultDiv.className = 'text-success fw-bold mt-3';
             } else if (data.status === 'info') {
                 playSound('info');
-                resultDiv.innerHTML = `ℹ️ ${data.message}`;
-                resultDiv.className = "text-info fw-bold mt-3";
+                resultDiv.innerHTML = `${data.message}`;
+                resultDiv.className = 'text-info fw-bold mt-3';
             } else {
                 playSound('error');
-                resultDiv.innerHTML = `❌ ${data.message || 'Lỗi không xác định.'}`;
-                resultDiv.className = "text-danger mt-3";
+                resultDiv.innerHTML = `${data.message || 'Lỗi không xác định.'}`;
+                resultDiv.className = 'text-danger mt-3';
             }
         })
-        .catch(error => {
+        .catch(() => {
             playSound('error');
-            resultDiv.innerHTML = `❌ Lỗi kết nối máy chủ!`;
-            resultDiv.className = "text-danger mt-3";
+            resultDiv.innerHTML = 'Lỗi kết nối máy chủ!';
+            resultDiv.className = 'text-danger mt-3';
         })
         .finally(() => {
-            setTimeout(() => { 
-                isProcessing = false; 
-                lastSentCode = ""; 
+            setTimeout(() => {
+                isProcessing = false;
+                lastSentCode = '';
             }, 3000);
         });
     }
 
     function onScanSuccess(decodedText) {
-        let code = decodedText.trim();
+        const code = decodedText.trim();
         if (!code || isProcessing) return;
         if (code === lastSentCode) return;
-        if (code.indexOf('_') === -1) {
-            let resultDiv = document.getElementById('scan-result');
-            resultDiv.innerHTML = `❌ Mã QR không đúng định dạng nhà trường.`;
-            resultDiv.className = "text-danger mt-3";
-            return;
-        }
 
         lastSentCode = code;
         sendAttendance(code);
     }
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", 
-        { 
-            fps: 15, 
-            qrbox: {width: 250, height: 250},
-            aspectRatio: 1.0 
-        }, 
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        'reader',
+        {
+            fps: 15,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+        },
         false
     );
-    
-    html5QrcodeScanner.render(onScanSuccess, (error) => {});
+
+    html5QrcodeScanner.render(onScanSuccess, () => {});
 </script>
 @endsection
-

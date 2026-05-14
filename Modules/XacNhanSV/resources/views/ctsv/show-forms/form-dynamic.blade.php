@@ -62,7 +62,7 @@
         <p class="mb-1">
             Tôi tên:
             <span class="border-bottom px-1" style="min-width:200px;display:inline-block">
-                {{ $d['ho_ten'] ?? ($submission->user->first_name.' '.$submission->user->last_name) }}
+                {{ $d['ho_ten'] ?? ($submission->user->last_name.' '.$submission->user->first_name) }}
             </span>
             &nbsp;&nbsp; Giới tính: <strong>{{ $d['gioi_tinh'] ?? '—' }}</strong>
         </p>
@@ -103,7 +103,7 @@
             <div class="text-center" style="width:40%">
                 <p class="fw-bold mb-0">Người làm đơn</p>
                 <br><br><br>
-                <p>{{ $submission->user->first_name }} {{ $submission->user->last_name }}</p>
+                <p>{{ $submission->user->last_name }} {{ $submission->user->first_name }}</p>
             </div>
         </div>
 
@@ -114,7 +114,7 @@
             XÁC NHẬN CỦA {{ strtoupper($submission->form->schoolname ?? 'TRƯỜNG ĐẠI HỌC CÔNG NGHỆ SÀI GÒN') }}
         </div>
 
-        <p>Xác nhận sinh viên: <strong>{{ $submission->user->first_name }} {{ $submission->user->last_name }}</strong></p>
+        <p>Xác nhận sinh viên: <strong>{{ $submission->user->last_name }} {{ $submission->user->first_name }}</strong></p>
         <p class="mb-1">
             Hiện là sinh viên năm thứ
             <span class="border-bottom px-1">{{ $d['nam_thu'] ?? '___' }}</span>

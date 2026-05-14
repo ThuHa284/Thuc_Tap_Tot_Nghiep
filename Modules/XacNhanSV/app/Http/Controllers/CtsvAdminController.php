@@ -7,6 +7,7 @@ use Modules\XacNhanSV\Models\EtpForm;
 use Modules\XacNhanSV\Models\EtpFormDetail;
 use Modules\XacNhanSV\Models\EtpFormStudent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CtsvAdminController extends Controller
 {
@@ -41,7 +42,9 @@ class CtsvAdminController extends Controller
     public function createForm()
     {
         $this->checkAdmin();
-        return view('xacnhansv::ctsv.admin.form-create');
+        // Lấy danh sách người ký từ bảng etp_leader
+        $leaders = DB::table('etp_leader')->get();
+        return view('xacnhansv::ctsv.admin.form-create', compact('leaders'));
     }
 
     public function storeForm(Request $request)
@@ -50,12 +53,24 @@ class CtsvAdminController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'leader_id'   => 'required|exists:etp_leader,id',
             'fields'      => 'nullable|array',
             'fields.*'    => 'nullable|string|max:255',
         ]);
-        $form = EtpForm::create($request->only([
-            'name', 'description', 'url', 'signtitle', 'signname', 'schoolid', 'schoolname'
-        ]));
+
+        // Lấy thông tin người ký từ etp_leader
+        $leader = DB::table('etp_leader')->find($request->leader_id);
+
+        $form = EtpForm::create([
+            'name'        => $request->name,
+            'description' => $request->description,
+            'url'         => $request->url,
+            'signtitle'   => $leader->title,
+            'signname'    => $leader->fullname,
+            'schoolid'    => 'DSG',
+            'schoolname'  => 'Trường Đại học Công nghệ Sài Gòn',
+        ]);
+
         if ($request->filled('fields')) {
             foreach (array_values(array_filter($request->fields)) as $order => $label) {
                 EtpFormDetail::create([
@@ -65,6 +80,7 @@ class CtsvAdminController extends Controller
                 ]);
             }
         }
+
         return redirect()->route('xacnhansv.ctsv.admin.forms')
             ->with('success', 'Đã tạo mẫu giấy tờ mới.');
     }
@@ -72,8 +88,9 @@ class CtsvAdminController extends Controller
     public function editForm(int $formid)
     {
         $this->checkAdmin();
-        $form = EtpForm::with('details')->findOrFail($formid);
-        return view('xacnhansv::ctsv.admin.form-edit', compact('form'));
+        $form    = EtpForm::with('details')->findOrFail($formid);
+        $leaders = DB::table('etp_leader')->get();
+        return view('xacnhansv::ctsv.admin.form-edit', compact('form', 'leaders'));
     }
 
     public function updateForm(Request $request, int $formid)
@@ -81,13 +98,24 @@ class CtsvAdminController extends Controller
         $this->checkAdmin();
         $form = EtpForm::findOrFail($formid);
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'fields'   => 'nullable|array',
-            'fields.*' => 'nullable|string|max:255',
+            'name'      => 'required|string|max:255',
+            'leader_id' => 'required|exists:etp_leader,id',
+            'fields'    => 'nullable|array',
+            'fields.*'  => 'nullable|string|max:255',
         ]);
-        $form->update($request->only([
-            'name', 'description', 'url', 'signtitle', 'signname', 'schoolid', 'schoolname'
-        ]));
+
+        $leader = DB::table('etp_leader')->find($request->leader_id);
+
+        $form->update([
+            'name'        => $request->name,
+            'description' => $request->description,
+            'url'         => $request->url,
+            'signtitle'   => $leader->title,
+            'signname'    => $leader->fullname,
+            'schoolid'    => 'DSG',
+            'schoolname'  => 'Trường Đại học Công nghệ Sài Gòn',
+        ]);
+
         $form->details()->delete();
         if ($request->filled('fields')) {
             foreach (array_values(array_filter($request->fields)) as $order => $label) {
@@ -98,6 +126,7 @@ class CtsvAdminController extends Controller
                 ]);
             }
         }
+
         return redirect()->route('xacnhansv.ctsv.admin.forms')
             ->with('success', 'Đã cập nhật mẫu giấy tờ.');
     }
@@ -105,7 +134,17 @@ class CtsvAdminController extends Controller
     public function destroyForm(int $formid)
     {
         $this->checkAdmin();
-        EtpForm::findOrFail($formid)->delete();
+        $form = EtpForm::findOrFail($formid);
+
+        // Xóa các đơn liên quan trước
+        EtpFormStudent::where('formid', $formid)->delete();
+
+        // Xóa các field detail
+        EtpFormDetail::where('formid', $formid)->delete();
+
+        // Xóa form
+        $form->delete();
+
         return back()->with('success', 'Đã xóa mẫu giấy tờ.');
     }
 
@@ -157,43 +196,30 @@ class CtsvAdminController extends Controller
         return back()->with('success', 'Đã từ chối đơn #'.$id.'.');
     }
 
-    // ✅ Đánh dấu đã in thủ công từ trang chi tiết đơn - chỉ Admin
     public function markPrinted(int $id)
     {
         $this->checkAdmin();
-
         $submission = EtpFormStudent::findOrFail($id);
-
         if ((int)$submission->status !== EtpFormStudent::STATUS_APPROVED) {
             return back()->with('error', 'Chỉ có thể đánh dấu đã in khi đơn đã được duyệt!');
         }
-
         $submission->update(['status' => EtpFormStudent::STATUS_PRINTED]);
-
         return back()->with('success', 'Đã đánh dấu đơn #'.$id.' là đã in!');
     }
 
-    // ✅ In hàng loạt — tự động mark STATUS_PRINTED khi mở trang in
     public function printBulk(Request $request)
     {
         $this->checkAdmin();
         $ids = array_filter(explode(',', $request->query('ids', '')));
-
         if (empty($ids)) {
             return redirect()->route('xacnhansv.ctsv.admin.requests')
                 ->with('error', 'Chưa chọn đơn nào để in.');
         }
-
         $submissions = EtpFormStudent::with(['form.details', 'user'])
-            ->whereIn('id', $ids)
-            ->get();
-
-        // ✅ Tự động cập nhật trạng thái "Đã in" cho các đơn đã được duyệt
-        // Chỉ cập nhật đơn STATUS_APPROVED, không động vào đơn đã in trước đó
+            ->whereIn('id', $ids)->get();
         $updatedCount = EtpFormStudent::whereIn('id', $ids)
             ->where('status', EtpFormStudent::STATUS_APPROVED)
             ->update(['status' => EtpFormStudent::STATUS_PRINTED]);
-
         return view('xacnhansv::ctsv.admin.print-bulk', compact('submissions', 'updatedCount'));
     }
 }

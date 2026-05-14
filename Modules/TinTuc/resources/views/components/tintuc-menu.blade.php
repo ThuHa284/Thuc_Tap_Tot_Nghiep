@@ -58,25 +58,12 @@
     <a href="{{ route('tintuc.index') }}" class="{{ request()->routeIs('tintuc.index') && !request()->routeIs('tintuc.create') && !request()->routeIs('tintuc.edit') && !request()->routeIs('tintuc.show') ? 'active' : '' }}">
         <i class="fas fa-newspaper"></i> Tin tức
     </a>
-    @php
-        $activeDeclaration = \Modules\TinTuc\Models\TinTuc::currentKhaiBaoNoiTru();
-    @endphp
     @auth
         @if(auth()->user()->isAdmin())
             <span class="menu-divider"></span>
             <a href="{{ route('loaitin.index') }}" class="{{ request()->routeIs('loaitin.*') ? 'active' : '' }}">
                 <i class="fas fa-folder-open"></i> Loại tin
             </a>
-            <a href="{{ route('khai_bao_noi_tru.index') }}" class="{{ request()->routeIs('khai_bao_noi_tru.*') ? 'active' : '' }}">
-                <i class="fas fa-home"></i> Khai báo nội trú
-            </a>
-        @else
-            @if($activeDeclaration)
-                <span class="menu-divider"></span>
-                <a href="{{ route('khai_bao_noi_tru.sinh_vien') }}" class="{{ request()->routeIs('khai_bao_noi_tru.sinh_vien') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i> Khai báo nội trú
-                </a>
-            @endif
         @endif
     @endauth
 </div>

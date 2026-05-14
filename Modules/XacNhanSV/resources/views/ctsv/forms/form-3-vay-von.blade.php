@@ -17,19 +17,29 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-        {{-- ✅ Cảnh báo đã có đơn --}}
+
+    {{-- ✅ Cảnh báo đã có đơn trong kỳ --}}
     @if($existingWarning ?? null)
     <div class="alert alert-warning border-warning d-flex align-items-start gap-3 mb-3">
         <span style="font-size:24px">⚠️</span>
         <div>
             <div class="fw-bold mb-1">Lưu ý!</div>
-            <div>{{ $existingWarning }}</div>
-            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong 
+            <div>{!! $existingWarning !!}</div>
+            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong
                 <a href="{{ route('xacnhansv.ctsv.my-requests') }}">lịch sử đơn</a>.
             </div>
         </div>
     </div>
     @endif
+
+    {{-- ✅ Ẩn form nếu đã nộp trong kỳ --}}
+    @if($cannotSubmit ?? false)
+        <div class="text-center mt-4">
+            <a href="{{ route('xacnhansv.ctsv.my-requests') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Xem đơn của tôi
+            </a>
+        </div>
+    @else
 
     @php
         $khoaMap = [
@@ -38,7 +48,11 @@
             'dsgn' => 'Thiết kế', 'kd' => 'Kinh doanh',
             'ktct' => 'Kế toán - Kiểm toán', 'qtkd' => 'Quản trị Kinh doanh',
         ];
-        $khoaTen = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+        $khoaTen  = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+        $dobParts = $dob ? explode('/', $dob) : ['', '', ''];
+        $dobNgay  = $dobParts[0] ?? '';
+        $dobThang = $dobParts[1] ?? '';
+        $dobNam   = $dobParts[2] ?? '';
     @endphp
 
     <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST">
@@ -50,39 +64,42 @@
             <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
             <div><em>Độc lập – Tự do – Hạnh phúc</em></div>
             <div>———————————</div>
-            <div class="fw-bold mt-2" style="font-size:16px">GIẤY XÁC NHẬN</div>
+            <div class="fw-bold mt-2" style="font-size:16px">GIẤY XÁC NHẬN VAY VỐN SINH VIÊN</div>
         </div>
 
         <p class="mb-1">
             Họ và tên: <input type="text" name="ho_ten" class="border-0 border-bottom px-1"
                 style="width:250px;outline:none;background:transparent"
-                value="{{ $user->first_name }} {{ $user->last_name }}" readonly>
+                value="{{ $user->last_name }} {{ $user->first_name }}" readonly>
         </p>
 
+        {{-- ✅ Ngày sinh readonly từ DB --}}
         <p class="mb-1">
             Sinh ngày:
-            <input type="number" name="ngay" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="dd" min="1" max="31" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="ngay" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNgay }}" readonly tabindex="-1">
             tháng
-            <input type="number" name="thang" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="mm" min="1" max="12" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="thang" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobThang }}" readonly tabindex="-1">
             năm
-            <input type="number" name="nam" class="border-0 border-bottom px-1"
-                style="width:60px;outline:none;background:transparent"
-                placeholder="yyyy" min="1900" max="{{ date('Y') }}" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="nam" class="border-0 border-bottom px-1"
+                style="width:60px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNam }}" readonly tabindex="-1">
             &nbsp;&nbsp; Giới tính:
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nam" checked> Nam</label>
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nữ"> Nữ</label>
+            @if(!$dob)
+                <span class="text-danger small ms-2" style="font-family:sans-serif">⚠️ Chưa có ngày sinh trong hệ thống.</span>
+            @endif
         </p>
 
         <p class="mb-1">
             CMND/CCCD số:
             <input type="text" name="cmnd" class="border-0 border-bottom px-1"
                 style="width:120px;outline:none;background:transparent"
-                placeholder="9 hoặc 12 số"
-                pattern="^[0-9]{9}$|^[0-9]{12}$"
+                placeholder="9 hoặc 12 số" pattern="^[0-9]{9}$|^[0-9]{12}$"
                 title="CMND 9 số hoặc CCCD 12 số"
                 required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
             &nbsp; Ngày cấp:
@@ -112,12 +129,10 @@
         </p>
 
         <p class="mb-1">
-            Khóa:
+           Khóa:
             <input type="text" name="khoa" class="border-0 border-bottom px-1"
                 style="width:100px;outline:none;background:transparent"
-                placeholder="2022-2026"
-                pattern="^\d{4}-\d{4}$"
-                title="Định dạng: yyyy-yyyy" required>
+                value="{{ $user->academic_year }}" readonly>
             &nbsp; Lớp:
             <input type="text" name="lop" class="border-0 border-bottom px-1"
                 style="width:100px;outline:none;background:transparent" value="{{ $user->classid }}" readonly>
@@ -154,8 +169,7 @@
             Học phí hàng tháng:
             <input type="text" name="hoc_phi" class="border-0 border-bottom px-1"
                 style="width:150px;outline:none;background:transparent"
-                placeholder="VD: 3500000"
-                pattern="^[0-9]+$" title="Chỉ nhập số"
+                placeholder="VD: 3500000" pattern="^[0-9]+$" title="Chỉ nhập số"
                 required oninput="this.value=this.value.replace(/[^0-9]/g,'')"> đồng.
         </p>
 
@@ -223,13 +237,15 @@
         </div>
     </div>
     </form>
+
+    @endif {{-- end cannotSubmit --}}
 </div>
 <script>
 function toggleDiaChi(val) {
     const box = document.getElementById('dia-chi-buu-dien');
     const input = document.getElementById('ReceivingAddress');
-    if (val === 'buu_dien') { box.style.display='block'; input.required=true; }
-    else { box.style.display='none'; input.required=false; input.value=''; }
+    if (val === 'buu_dien') { box.style.display = 'block'; input.required = true; }
+    else { box.style.display = 'none'; input.required = false; input.value = ''; }
 }
 </script>
 @endsection

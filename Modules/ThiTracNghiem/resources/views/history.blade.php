@@ -78,14 +78,14 @@
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark mb-0">Lịch sử làm bài</h2>
+        <h2 class="fw-bold text-dark mb-0">Kết quả các bài thi</h2>
         <a href="{{ route('thitracnghiem.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
-            <i class="bi bi-house-door me-1"></i> Dashboard
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
         </a>
     </div>
 
     <div class="card shadow-sm history-card">
-        <div class="history-header">
+        <!-- <div class="history-header">
             <div class="d-flex align-items-center">
                 <div class="bg-white bg-opacity-20 p-3 rounded-circle me-3">
                     <i class="bi bi-clock-history fs-3"></i>
@@ -95,7 +95,7 @@
                     <p class="opacity-75 mb-0 small">Dưới đây là kết quả của các bài thi bạn đã tham gia.</p>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="card-body p-0">
             @if(count($history) > 0)
@@ -105,9 +105,9 @@
                         <tr>
                             <th class="text-center" style="width: 80px;">STT</th>
                             <th>Tên đề thi</th>
-                            <th class="text-center">Số câu đúng</th>
-                            <th class="text-center">Điểm số</th>
-                            <th class="text-center">Trạng thái</th>
+                            <!-- <th class="text-center">Số câu đúng</th> -->
+                            <!-- <th class="text-center">Điểm số</th>
+                            <th class="text-center">Trạng thái</th> -->
                             <th class="text-center">Ngày thi</th>
                         </tr>
                     </thead>
@@ -119,13 +119,13 @@
                                 <div class="fw-bold text-dark">{{ $row->quiz->quiz_name ?? 'Đề thi đã bị xóa' }}</div>
                                 <div class="small text-muted">Mã đề: #{{ $row->quid }}</div>
                             </td>
-                            <td class="text-center">
+                            <!-- <td class="text-center">
                                 <span class="text-dark">{{ $row->score_obtained }}</span>
-                            </td>
-                            <td class="text-center">
+                            </td> -->
+                            <!-- <td class="text-center">
                                 <span class="score-badge">{{ $row->percentage_obtained }}</span>
-                            </td>
-                            <td class="text-center">
+                            </td> -->
+                            <!-- <td class="text-center">
                                 @if($row->result_status == 'Pass')
                                 <span class="badge-status bg-success bg-opacity-10 text-success">
                                     <i class="bi bi-check-circle-fill me-1"></i> ĐẠT
@@ -135,7 +135,7 @@
                                     <i class="bi bi-x-circle-fill me-1"></i> CHƯA ĐẠT
                                 </span>
                                 @endif
-                            </td>
+                            </td> -->
                             <td class="text-center text-muted small">
                                 {{ \Carbon\Carbon::createFromTimestamp($row->end_time)->setTimezone('Asia/Ho_Chi_Minh')->format('H:i d/m/Y') }}
                             </td>

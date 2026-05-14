@@ -10,4 +10,9 @@ class SavsoftQuiz extends Model
     protected $primaryKey = 'quid';
     public $timestamps = false;
     protected $guarded = [];
+
+    public function group()
+    {
+        return $this->belongsTo(SavsoftGroup::class, 'gids', 'gid');
+    }
 }

@@ -17,19 +17,30 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-        {{-- ✅ Cảnh báo đã có đơn --}}
+
+    {{-- ✅ Cảnh báo đã có đơn trong kỳ --}}
     @if($existingWarning ?? null)
     <div class="alert alert-warning border-warning d-flex align-items-start gap-3 mb-3">
         <span style="font-size:24px">⚠️</span>
         <div>
             <div class="fw-bold mb-1">Lưu ý!</div>
-            <div>{{ $existingWarning }}</div>
-            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong 
+            <div>{!! $existingWarning !!}</div>
+            <div class="mt-2 small text-muted">Bạn vẫn có thể xem lại đơn cũ trong
                 <a href="{{ route('xacnhansv.ctsv.my-requests') }}">lịch sử đơn</a>.
             </div>
         </div>
     </div>
     @endif
+
+    {{-- ✅ Nếu đã có đơn trong kỳ thì ẩn form --}}
+    @if($cannotSubmit ?? false)
+        <div class="text-center mt-4">
+            <a href="{{ route('xacnhansv.ctsv.my-requests') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Xem đơn của tôi
+            </a>
+        </div>
+    @else
+
     @php
         $khoaMap = [
             'cntt' => 'Công nghệ Thông tin', 'ckhi' => 'Cơ khí',
@@ -37,7 +48,12 @@
             'dsgn' => 'Thiết kế', 'kd' => 'Kinh doanh',
             'ktct' => 'Kế toán - Kiểm toán', 'qtkd' => 'Quản trị Kinh doanh',
         ];
-        $khoaTen = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+        $khoaTen  = $khoaMap[strtolower($user->facultyid ?? '')] ?? ($user->facultyid ?? '');
+        // ✅ Tách ngày sinh từ $dob (d/m/Y) do controller truyền xuống
+        $dobParts = $dob ? explode('/', $dob) : ['', '', ''];
+        $dobNgay  = $dobParts[0] ?? '';
+        $dobThang = $dobParts[1] ?? '';
+        $dobNam   = $dobParts[2] ?? '';
     @endphp
 
     <form action="{{ route('xacnhansv.ctsv.form.store', $form->formid) }}" method="POST">
@@ -56,28 +72,31 @@
         <p class="mb-1">
             Tôi tên: <input type="text" name="ho_ten" class="border-0 border-bottom px-1"
                 style="width:250px;outline:none;background:transparent"
-                value="{{ $user->first_name }} {{ $user->last_name }}" readonly>
+                value="{{ $user->last_name }} {{ $user->first_name }}" readonly>
         </p>
 
+        {{-- ✅ Ngày sinh: lấy từ DB, readonly --}}
         <p class="mb-1">
             Sinh ngày:
-            <input type="number" name="ngay" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="dd" min="1" max="31" required
-                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="ngay" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNgay }}" readonly tabindex="-1">
             tháng
-            <input type="number" name="thang" class="border-0 border-bottom px-1"
-                style="width:40px;outline:none;background:transparent"
-                placeholder="mm" min="1" max="12" required
-                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="thang" class="border-0 border-bottom px-1"
+                style="width:40px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobThang }}" readonly tabindex="-1">
             năm
-            <input type="number" name="nam" class="border-0 border-bottom px-1"
-                style="width:60px;outline:none;background:transparent"
-                placeholder="yyyy" min="1900" max="{{ date('Y') }}" required
-                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <input type="text" name="nam" class="border-0 border-bottom px-1"
+                style="width:60px;outline:none;background:transparent;color:inherit"
+                value="{{ $dobNam }}" readonly tabindex="-1">
             &nbsp;&nbsp; Giới tính:
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nam" checked> Nam</label>
             <label class="ms-2"><input type="radio" name="gioi_tinh" value="Nữ"> Nữ</label>
+            @if(!$dob)
+                <span class="text-danger small ms-2" style="font-family:sans-serif">
+                    ⚠️ Chưa có ngày sinh trong hệ thống.
+                </span>
+            @endif
         </p>
 
         <p class="mb-1">
@@ -93,8 +112,7 @@
             Hộ khẩu thường trú:
             <input type="text" name="ho_khau" class="border-0 border-bottom px-1"
                 style="width:380px;outline:none;background:transparent"
-                placeholder="Nhập địa chỉ hộ khẩu" required
-                pattern=".*\S.*" title="Không được để trống">
+                placeholder="Nhập địa chỉ hộ khẩu" required pattern=".*\S.*" title="Không được để trống">
         </p>
 
         <p class="mb-1">
@@ -148,13 +166,13 @@
             </div>
             <div class="text-center" style="width:40%">
                 <p class="fw-bold mb-0">Người làm đơn</p><br><br><br>
-                <p>{{ $user->first_name }} {{ $user->last_name }}</p>
+                <p>{{ $user->last_name }} {{ $user->first_name }}</p>
             </div>
         </div>
 
         <hr class="my-3">
         <div class="text-center fw-bold mb-2">XÁC NHẬN CỦA TRƯỜNG ĐẠI HỌC CÔNG NGHỆ SÀI GÒN</div>
-        <p>Xác nhận sinh viên: {{ $user->first_name }} {{ $user->last_name }}</p>
+        <p>Xác nhận sinh viên: {{ $user->last_name }} {{ $user->first_name }}</p>
         <p class="mb-1">
             Hiện là sinh viên năm thứ
             <input type="number" name="nam_thu" class="border-0 border-bottom px-1"
@@ -167,13 +185,12 @@
             &nbsp; Năm học:
             <input type="text" name="nam_hoc" class="border-0 border-bottom px-1"
                 style="width:100px;outline:none;background:transparent"
-                placeholder="2022-2026"
-                pattern="^\d{4}-\d{4}$"
+                placeholder="2022-2026" pattern="^\d{4}-\d{4}$"
                 title="Định dạng: yyyy-yyyy (VD: 2022-2026)" required>
-            &nbsp; Khóa học:
-            <input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
-                style="width:100px;outline:none;background:transparent"
-                placeholder="VD: K2022" required>
+           &nbsp; Khóa học:
+<input type="text" name="khoa_hoc" class="border-0 border-bottom px-1"
+    style="width:100px;outline:none;background:transparent"
+    value="{{ $user->academic_year }}" readonly>
         </p>
         <p>MSSV: {{ $user->studentid }} &nbsp;&nbsp; Khoa: {{ $khoaTen }}</p>
         <p>Hệ đào tạo: chính quy của Trường Đại học Công nghệ Sài Gòn.</p>
@@ -217,13 +234,15 @@
         </div>
     </div>
     </form>
+
+    @endif {{-- end cannotSubmit --}}
 </div>
 <script>
 function toggleDiaChi(val) {
     const box = document.getElementById('dia-chi-buu-dien');
     const input = document.getElementById('ReceivingAddress');
-    if (val === 'buu_dien') { box.style.display='block'; input.required=true; }
-    else { box.style.display='none'; input.required=false; input.value=''; }
+    if (val === 'buu_dien') { box.style.display = 'block'; input.required = true; }
+    else { box.style.display = 'none'; input.required = false; input.value = ''; }
 }
 </script>
 @endsection

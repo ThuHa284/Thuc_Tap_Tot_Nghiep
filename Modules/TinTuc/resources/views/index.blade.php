@@ -2,246 +2,468 @@
 
 @section('content')
 <style>
-    .news-card {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0;
     }
 
-    .news-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+    .breadcrumb-custom {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 20px;
     }
 
-    .news-card img {
-        transition: transform 0.5s ease;
+    .breadcrumb-custom .breadcrumb-item a {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
     }
 
-    .news-card:hover img {
-        transform: scale(1.1);
+    .breadcrumb-custom .breadcrumb-item a:hover {
+        color: #667eea;
     }
 
-    .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .breadcrumb-custom .breadcrumb-item.active {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .news-section {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .news-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         color: white;
-        padding: 25px 30px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .horizontal-menu {
-        background: white;
-        border-radius: 12px;
-        padding: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    .news-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .news-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .news-item {
+        padding: 22px 25px;
+        border-bottom: 1px solid #eee;
         display: flex;
-        gap: 8px;
+        align-items: flex-start;
+        gap: 20px;
+        transition: background 0.2s;
+    }
+
+    .news-item:last-child {
+        border-bottom: none;
+    }
+
+    .news-item:hover {
+        background: #f8f9fa;
+    }
+
+    .news-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .news-icon.khai-bao {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .news-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .news-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .news-title a {
+        color: #2c3e50;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .news-title a:hover {
+        color: #667eea;
+    }
+
+    .news-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 15px;
         flex-wrap: wrap;
     }
 
-    .horizontal-menu a {
-        padding: 10px 20px;
-        border-radius: 8px;
-        color: #555;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    .news-meta i {
+        margin-right: 4px;
     }
 
-    .horizontal-menu a:hover {
+    .news-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .news-badge.khai-bao {
+        background: #e8f5f3;
+        color: #11998e;
+    }
+
+    .news-badge.thong-bao {
+        background: #fff3e0;
+        color: #e65100;
+    }
+
+    .news-badge.tin-tuc {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .news-date-badge {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-align: center;
+        min-width: 60px;
+        flex-shrink: 0;
+    }
+
+    .news-date-badge .day {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .news-date-badge .month {
+        font-size: 0.7rem;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+
+    .pagination-box {
+        padding: 15px 25px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination-box .pagination {
+        margin: 0;
+    }
+
+    .pagination-box .page-link {
+        color: #667eea;
+        border: 1px solid #e0e0e0;
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+
+    .pagination-box .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+    }
+
+    .pagination-box .page-link:hover {
         background: #f0f4ff;
         color: #667eea;
     }
 
-    .horizontal-menu a.active {
+    .search-box {
+        padding: 20px 25px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-form input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+
+    .search-form input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-form button {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .empty-state {
+        padding: 60px 25px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+
+    .btn-add-news {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-add-news:hover {
+        opacity: 0.9;
         color: white;
     }
 
-    .horizontal-menu a i {
-        font-size: 14px;
+    /* Banner khai báo */
+    .declaration-banner {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .declaration-banner h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .declaration-banner p {
+        margin: 0;
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .declaration-banner .btn {
+        background: white;
+        color: #11998e;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+
+    .declaration-banner .btn:hover {
+        background: #f0f9f8;
+        color: #0d7a70;
+    }
+
+    /* Admin actions */
+    .admin-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .admin-actions .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 4px;
     }
 </style>
 
-<div class="row">
-    {{-- Menu ngang --}}
-    <div class="col-12">
-        @include('tintuc::components.tintuc-menu')
-    </div>
-</div>
-
-{{-- Page Header --}}
-<div class="page-header">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="container-fluid px-4">
+    {{-- Tiêu đề trang --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 class="mb-1 fw-bold">
-                <i class="fas fa-newspaper me-2"></i>Tin Tức & Sự Kiện
-            </h2>
-            <p class="mb-0 opacity-75 small">Cập nhật những tin tức mới nhất về hoạt động của trường</p>
+            <h1 class="page-title">
+                <i class="fas fa-newspaper me-2 text-primary"></i>Tin Tức
+            </h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Cập nhật thông tin hoạt động của trường</p>
         </div>
         @if(auth()->check() && auth()->user()->isAdmin())
-        <a href="{{ route('tintuc.create') }}" class="btn btn-light rounded-pill px-4 fw-medium">
-            <i class="fas fa-plus me-1"></i> Thêm Tin Tức
+        <a href="{{ route('tintuc.create') }}" class="btn-add-news">
+            <i class="fas fa-plus"></i> Thêm Tin Tức
         </a>
         @endif
     </div>
-</div>
 
-{{-- Breadcrumb --}}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb bg-white shadow-sm rounded-3 px-3 py-2 mb-0">
-        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-secondary"><i class="fas fa-home"></i></a></li>
-        <li class="breadcrumb-item active text-dark fw-medium" aria-current="page">Tin Tức</li>
-    </ol>
-</nav>
+    {{-- Breadcrumb --}}
+    <nav aria-label="breadcrumb" class="breadcrumb-custom">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i> Trang chủ</a></li>
+            <li class="breadcrumb-item active">Tin Tức</li>
+        </ol>
+    </nav>
 
-<div class="card border-0 shadow-lg rounded-3">
-    <div class="card-header bg-white border-bottom py-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-dark">
-                <i class="fas fa-list me-2 text-primary"></i>Danh Sách Tin Tức
-            </h5>
-            <span class="badge bg-primary rounded-pill px-3">{{ $danhSachTin->count() }} tin</span>
+    {{-- Banner khai báo ngoại trú đang mở --}}
+    @php
+        $activeDeclaration = \Modules\TinTuc\Models\TinTuc::currentKhaiBaoNoiTru();
+    @endphp
+
+    @if($activeDeclaration)
+    <div class="declaration-banner">
+        <div>
+            <h5><i class="fas fa-bullhorn me-2"></i>Kỳ khai báo ngoại trú đang mở</h5>
+            <p>{{ $activeDeclaration->title }}</p>
         </div>
+        <a href="{{ route('tintuc.show', $activeDeclaration->id) }}" class="btn">
+            <i class="fas fa-edit me-1"></i> Khai báo ngay
+        </a>
     </div>
-    <div class="card-body p-4">
+    @endif
 
-        {{-- Thông báo --}}
-        @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    {{-- Thông báo --}}
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert" style="border: none;">
+        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    {{-- Danh sách tin tức --}}
+    <div class="news-section">
+        <div class="news-header">
+            <h4><i class="fas fa-list me-2"></i>Danh Sách Tin Tức</h4>
+            <span class="badge bg-light text-dark">{{ $danhSachTin->total() }} tin</span>
         </div>
-        @endif
 
         {{-- Tìm kiếm cho Admin --}}
         @if(auth()->check() && auth()->user()->isAdmin())
-        <div class="mb-4">
-            <form method="GET" action="{{ route('tintuc.index') }}" class="row g-2">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 rounded-end-pill"
-                            placeholder="Tìm kiếm tiêu đề tin tức..." value="{{ request('search') }}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100 rounded-pill" type="submit">Tìm kiếm</button>
-                </div>
+        <div class="search-box">
+            <form method="GET" action="{{ route('tintuc.index') }}" class="search-form">
+                <input type="text" name="search" placeholder="Tìm kiếm tiêu đề tin tức..." value="{{ request('search') }}">
+                <button type="submit"><i class="fas fa-search"></i> Tìm</button>
                 @if(request('search'))
-                <div class="col-md-2">
-                    <a href="{{ route('tintuc.index') }}" class="btn btn-outline-secondary w-100 rounded-pill">Xóa lọc</a>
-                </div>
+                <a href="{{ route('tintuc.index') }}" class="btn btn-outline-secondary">Xóa</a>
                 @endif
             </form>
         </div>
         @endif
 
+        {{-- Danh sách tin --}}
         @if($danhSachTin->count() > 0)
-        <div class="row g-3">
+        <ul class="news-list">
             @foreach($danhSachTin as $tin)
-            <div class="col-md-6 col-xl-4">
-                <div class="card h-100 border-0 rounded-3 news-card overflow-hidden shadow-sm {{ $tin->status == 0 && auth()->check() && auth()->user()->isAdmin() ? 'bg-light' : '' }}">
-                    @php
-                        $declarationText = \Illuminate\Support\Str::lower($tin->title . ' ' . $tin->content);
-                        $isDeclarationPost = (bool) $tin->is_khai_bao_noi_tru || \Illuminate\Support\Str::contains($declarationText, 'khai báo nội trú') || \Illuminate\Support\Str::contains($declarationText, 'khai bao noi tru');
-                    @endphp
-                    <div class="position-relative">
-                        @if($tin->img)
-                        <img src="{{ asset($tin->img) }}" class="card-img-top rounded-top-3"
-                            style="height: 180px; object-fit: cover;" alt="{{ $tin->title }}">
-                        @else
-                        <div class="d-flex justify-content-center align-items-center rounded-top-3 text-white"
-                            style="height: 180px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-image fa-4x opacity-50"></i>
-                        </div>
-                        @endif
-
-                        <span class="badge bg-primary rounded-pill px-3 position-absolute bottom-0 start-0 m-3">
-                            <i class="fas fa-tag me-1"></i>{{ $tin->loaitin->name ?? 'Tin tức' }}
-                        </span>
-
-                        @if(auth()->check() && auth()->user()->isAdmin() && $tin->status == 0)
-                        <span class="badge bg-secondary rounded-pill px-3 position-absolute top-0 end-0 m-2">
-                            <i class="fas fa-eye-slash me-1"></i>Ẩn
-                        </span>
-                        @endif
-                    </div>
-
-                    <div class="card-body d-flex flex-column p-3">
-                        <h6 class="card-title fw-bold lh-sm mb-2">
-                            <a href="{{ route('tintuc.show', $tin->id) }}" class="text-decoration-none text-dark stretched-link text-truncate d-block">
-                                {{ $tin->title }}
-                            </a>
-                        </h6>
-
-                        <p class="text-muted small mb-2">
-                            <i class="far fa-calendar-alt me-1"></i>
-                            {{ $tin->date1 ? \Carbon\Carbon::parse($tin->date1)->format('d/m/Y') : '' }}
-                        </p>
-
-                        @if(!empty($tin->attachment_path))
-                        <p class="text-primary small mb-2">
-                            <i class="fas fa-paperclip me-1"></i> Có {{ $tin->attachment_display_label ?? 'file' }} đính kèm
-                        </p>
-                        @endif
-
-                        @if(!empty($tin->attachments))
-                        <p class="text-primary small mb-2">
-                            <i class="fas fa-layer-group me-1"></i> Có {{ count($tin->attachments) }} tệp bổ sung
-                        </p>
-                        @endif
-
-                        @if($isDeclarationPost)
-                        <p class="text-success small mb-2">
-                            <i class="fas fa-home me-1"></i> Kỳ khai báo nội trú {{ $tin->khai_bao_ky ? '- Kỳ ' . $tin->khai_bao_ky : '' }}
-                        </p>
-                        @endif
-
-                        <p class="text-secondary small grow">
-                            {{ Str::limit(strip_tags($tin->content), 80) }}
-                        </p>
-
-                        @if(auth()->check() && auth()->user()->isAdmin())
-                        <div class="mt-auto pt-3 border-top">
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('tintuc.edit', $tin->id) }}" class="btn btn-sm btn-outline-primary rounded-pill flex-fill">
-                                    <i class="fas fa-edit me-1"></i>Sửa
-                                </a>
-                                <form action="{{ route('tintuc.destroy', $tin->id) }}" method="POST" class="d-inline flex-fill"
-                                    onsubmit="return confirm('Xóa tin: {{ Str::limit($tin->title, 30) }}?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill w-100">
-                                        <i class="fas fa-trash me-1"></i>Xóa
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        @else
-                        <a href="{{ route('tintuc.show', $tin->id) }}" class="btn btn-sm btn-primary rounded-pill mt-auto">
-                            <i class="fas fa-eye me-1"></i>Xem chi tiết
-                        </a>
-                        @endif
-                    </div>
+            <li class="news-item">
+                {{-- Ngày --}}
+                <div class="news-date-badge">
+                    <div class="day">{{ $tin->created_at ? \Carbon\Carbon::parse($tin->created_at)->format('d') : '' }}</div>
+                    <div class="month">{{ $tin->created_at ? \Carbon\Carbon::parse($tin->created_at)->format('m/Y') : '' }}</div>
                 </div>
-            </div>
+
+                {{-- Hình ảnh --}}
+                <div class="news-icon {{ $tin->is_khai_bao_noi_tru ? 'khai-bao' : '' }}">
+                    @if($tin->img && (str_starts_with($tin->img, 'http') || file_exists(public_path($tin->img))))
+                    <img src="{{ str_starts_with($tin->img, 'http') ? $tin->img : asset($tin->img) }}" alt="{{ $tin->title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    @endif
+                    <i class="fas {{ $tin->is_khai_bao_noi_tru ? 'fa-home' : (($tin->loaitin && str_contains(strtolower($tin->loaitin->name ?? ''), 'thông báo')) ? 'fa-bullhorn' : 'fa-newspaper') }}" style="{{ $tin->img && (str_starts_with($tin->img, 'http') || file_exists(public_path($tin->img))) ? 'display:none' : '' }}"></i>
+                </div>
+
+                {{-- Nội dung --}}
+                <div class="news-content">
+                    <h5 class="news-title">
+                        <a href="{{ route('tintuc.show', $tin->id) }}">{{ $tin->title }}</a>
+                    </h5>
+                    <div class="news-meta">
+                        <span>
+                            <i class="far fa-calendar-alt"></i>
+                            {{ $tin->created_at ? \Carbon\Carbon::parse($tin->created_at)->format('H:i d/m/Y') : '' }}
+                        </span>
+                        <span class="news-badge {{ $tin->is_khai_bao_noi_tru ? 'khai-bao' : (($tin->loaitin && Str::contains(Str::lower($tin->loaitin->name), 'thông báo')) ? 'thong-bao' : 'tin-tuc') }}">
+                            @if($tin->is_khai_bao_noi_tru)
+                            <i class="fas fa-home"></i> Khai báo ngoại trú
+                            @else
+                            <i class="fas fa-tag"></i> {{ $tin->loaitin->name ?? 'Tin tức' }}
+                            @endif
+                        </span>
+                        @if(!empty($tin->attachment_path))
+                        <span><i class="fas fa-paperclip"></i> Có file đính kèm</span>
+                        @endif
+                        @if(auth()->check() && auth()->user()->isAdmin() && $tin->status == 0)
+                        <span class="badge bg-secondary"><i class="fas fa-eye-slash"></i> Ẩn</span>
+                        @endif
+                    </div>
+
+                    {{-- Actions cho Admin --}}
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                    <div class="admin-actions mt-2">
+                        <a href="{{ route('tintuc.edit', $tin->id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <form action="{{ route('tintuc.destroy', $tin->id) }}" method="POST" class="d-inline"
+                            onsubmit="return confirm('Xóa tin: {{ Str::limit($tin->title, 30) }}?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </li>
             @endforeach
+        </ul>
+
+        {{-- Phân trang --}}
+        @if($danhSachTin->hasPages())
+        <div class="pagination-box">
+            {{ $danhSachTin->links('pagination::bootstrap-4') }}
         </div>
+        @endif
         @else
-        <div class="text-center py-5">
-            <div class="mb-4">
-                <i class="fas fa-newspaper fa-6x text-muted opacity-25"></i>
-            </div>
-            <h5 class="text-muted mb-3">Chưa có tin tức nào</h5>
-            @if(auth()->check() && auth()->user()->isAdmin())
-            <a href="{{ route('tintuc.create') }}" class="btn btn-primary rounded-pill px-4">
-                <i class="fas fa-plus me-1"></i>Thêm Tin Tức Đầu Tiên
-            </a>
-            @endif
+        <div class="empty-state">
+            <i class="fas fa-newspaper"></i>
+            <h5>Chưa có tin tức nào</h5>
+            <p>Hiện tại chưa có tin tức nào được đăng tải.</p>
         </div>
         @endif
     </div>

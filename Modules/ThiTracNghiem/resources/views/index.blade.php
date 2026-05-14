@@ -110,7 +110,7 @@
 <div class="container py-4">
     <div class="row g-4 animate-in">
         <!-- Cột trái: Thông tin cá nhân -->
-        <div class="col-lg-4">
+        <!-- <div class="col-lg-4">
             <div class="card shadow-sm dashboard-card profile-card h-100">
                 <div class="profile-header">
                     <div class="profile-avatar">
@@ -143,55 +143,38 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <!-- Cột phải: Tin nhắn mừng & Hành động -->
-        <div class="col-lg-8">
+        <!-- Hành động chính -->
+        <div class="col-12">
             @if(session('success'))
             <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
                 <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
             </div>
             @endif
 
-            <div class="welcome-banner shadow-sm">
-                <h3 class="fw-bold text-primary">Chào mừng trở lại!</h3>
-                <p class="mb-0 text-muted">Hệ thống thi trắc nghiệm trực tuyến luôn sẵn sàng cùng bạn chinh phục kiến thức.</p>
-            </div>
-
-            <h5 class="fw-bold mb-3">Hành động chính</h5>
-
-            <div class="row g-3">
-                <div class="col-md-6">
+            <div class="row g-4">
+                <div class="col-lg-6">
                     <div class="card dashboard-card action-card p-4" onclick="window.location.href='{{ route('thitracnghiem.quiz.list') }}'">
                         <div class="action-icon bg-soft-blue">
                             <i class="bi bi-journal-text"></i>
                         </div>
-                        <h5 class="fw-bold">Chọn đề thi</h5>
+                        <h5 class="fw-bold">Đề thi</h5>
                         <p class="text-muted small mb-0">Xem danh sách các bài thi đang diễn ra và bắt đầu làm bài ngay.</p>
                         <div class="mt-3 text-primary fw-semibold small">Truy cập ngay <i class="bi bi-arrow-right ms-1"></i></div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-lg-6">
                     <div class="card dashboard-card action-card p-4" onclick="window.location.href='{{ route('thitracnghiem.history') }}'">
                         <div class="action-icon bg-soft-green">
                             <i class="bi bi-graph-up"></i>
                         </div>
-                        <h5 class="fw-bold">Lịch sử & Kết quả</h5>
+                        <h5 class="fw-bold">Lịch sử</h5>
                         <p class="text-muted small mb-0">Xem lại các bài thi đã làm, điểm số và chi tiết các lần thi trước.</p>
                         <div class="mt-3 text-success fw-semibold small">Xem chi tiết <i class="bi bi-arrow-right ms-1"></i></div>
                     </div>
                 </div>
-
-            </div>
-
-            <div class="mt-5 p-4 rounded-4 bg-white shadow-sm border">
-                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Hướng dẫn nhanh</h6>
-                <ul class="small text-muted mb-0 ps-3">
-                    <li class="mb-2">Chọn <strong>Đề thi</strong> để bắt đầu quá trình làm bài.</li>
-                    <li class="mb-2">Mỗi bài thi có giới hạn thời gian nhất định, hãy chú ý đồng hồ đếm ngược.</li>
-                    <li>Điểm số sẽ được hiển thị ngay sau khi bạn kết thúc bài thi.</li>
-                </ul>
             </div>
         </div>
     </div>

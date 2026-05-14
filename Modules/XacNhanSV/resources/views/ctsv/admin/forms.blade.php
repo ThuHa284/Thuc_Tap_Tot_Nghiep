@@ -63,11 +63,10 @@
                                 {{-- Nút Xóa --}}
                                 <form action="{{ route('xacnhansv.ctsv.admin.forms.destroy', $form->formid) }}"
                                       method="POST"
-                                      onsubmit="return confirm('Xóa mẫu «{{ addslashes($form->name) }}»?\nCác đơn liên quan cũng sẽ bị xóa!')">
+                                      onsubmit="return confirm('Xóa mẫu «{{ addslashes($form->name) }}»?\n⚠️ {{ $form->submissions_count }} đơn liên quan cũng sẽ bị xóa!')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa"
-                                        {{ $form->submissions_count > 0 ? 'disabled title=Có đơn liên quan, không thể xóa' : '' }}>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
                                         <i class="bi bi-trash3"></i>
                                     </button>
                                 </form>

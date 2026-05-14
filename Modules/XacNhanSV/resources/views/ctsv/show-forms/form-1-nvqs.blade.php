@@ -40,14 +40,14 @@
             <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
             <div><em>Độc lập – Tự do – Hạnh phúc</em></div>
             <div>———————————</div>
-            <div class="fw-bold mt-2" style="font-size:16px">ĐƠN XIN XÁC NHẬN 1</div>
+            <div class="fw-bold mt-2" style="font-size:16px">ĐƠN XIN XÁC NHẬN NGHĨA VỤ QUÂN SỰ</div>
         </div>
 
         <p class="mb-2">Kính gửi: Ban Giám Hiệu Trường Đại học Công nghệ Sài Gòn</p>
 
         <p class="mb-1">
             Tôi tên: <span class="border-bottom px-1" style="min-width:200px;display:inline-block">
-                {{ $d['ho_ten'] ?? ($submission->user->first_name ?? '') . ' ' . ($submission->user->last_name ?? '') }}
+                {{ $d['ho_ten'] ?? ($submission->user->last_name ?? '') . ' ' . ($submission->user->first_name ?? '') }}
             </span>
             &nbsp;&nbsp; Giới tính: <strong>{{ $d['gioi_tinh'] ?? 'Nam' }}</strong>
         </p>
@@ -117,7 +117,7 @@
             <div class="text-center" style="width:40%">
                 <p class="fw-bold mb-0">Người làm đơn</p>
                 <br><br><br>
-                <p>{{ $submission->user->first_name ?? '' }} {{ $submission->user->last_name ?? '' }}</p>
+                <p>{{ $submission->user->last_name ?? '' }} {{ $submission->user->first_name ?? '' }}</p>
             </div>
         </div>
 
@@ -125,7 +125,7 @@
 
         <div class="text-center fw-bold mb-3">XÁC NHẬN CỦA TRƯỜNG ĐẠI HỌC CÔNG NGHỆ SÀI GÒN</div>
 
-        <p>Xác nhận sinh viên: {{ $submission->user->first_name ?? '' }} {{ $submission->user->last_name ?? '' }}</p>
+        <p>Xác nhận sinh viên: {{ $submission->user->last_name ?? '' }} {{ $submission->user->first_name ?? '' }}</p>
         <p class="mb-1">
             Hiện là sinh viên năm thứ
             <span class="border-bottom px-1">{{ $d['nam_thu'] ?? '___' }}</span>

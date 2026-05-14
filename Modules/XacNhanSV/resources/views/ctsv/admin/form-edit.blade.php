@@ -40,33 +40,30 @@
                     <textarea name="description" class="form-control" rows="3">{{ old('description', $form->description) }}</textarea>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Ảnh mẫu (url)</label>
-                        <input type="text" name="url" class="form-control"
-                               value="{{ old('url', $form->url) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Chức vụ người ký</label>
-                        <input type="text" name="signtitle" class="form-control"
-                               value="{{ old('signtitle', $form->signtitle) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Tên người ký</label>
-                        <input type="text" name="signname" class="form-control"
-                               value="{{ old('signname', $form->signname) }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Mã trường</label>
-                        <input type="text" name="schoolid" class="form-control"
-                               value="{{ old('schoolid', $form->schoolid) }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Tên trường</label>
-                        <input type="text" name="schoolname" class="form-control"
-                               value="{{ old('schoolname', $form->schoolname) }}">
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ảnh mẫu (url)</label>
+                    <input type="text" name="url" class="form-control"
+                           value="{{ old('url', $form->url) }}">
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Người ký <span class="text-danger">*</span></label>
+                    <select name="leader_id" class="form-select @error('leader_id') is-invalid @enderror" required>
+                        <option value="">-- Chọn người ký --</option>
+                        @foreach($leaders as $leader)
+                            @php
+                                $selected = old('leader_id')
+                                    ? old('leader_id') == $leader->id
+                                    : ($form->signname === $leader->fullname);
+                            @endphp
+                            <option value="{{ $leader->id }}" {{ $selected ? 'selected' : '' }}>
+                                {{ $leader->title }} – {{ $leader->fullname }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('leader_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
             </div>
         </div>
 

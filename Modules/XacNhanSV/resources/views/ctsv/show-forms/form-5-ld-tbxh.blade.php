@@ -48,7 +48,7 @@
 
         <p class="mb-1">
             Sinh viên: <span class="border-bottom px-1" style="min-width:220px;display:inline-block">
-                {{ $d['ho_ten'] ?? ($submission->user->first_name.' '.$submission->user->last_name) }}
+                {{ $d['ho_ten'] ?? ($submission->user->last_name.' '.$submission->user->first_name) }}
             </span>
             &nbsp;&nbsp; Giới tính: <strong>{{ $d['gioi_tinh'] ?? 'Nam' }}</strong>
         </p>
@@ -130,11 +130,16 @@
                     năm <span class="border-bottom px-1">{{ $d['nam_ky'] ?? date('Y') }}</span>
                 </p>
                 <p class="fw-bold mb-0">Người làm đơn</p><br><br><br>
-                <p>{{ $submission->user->first_name }} {{ $submission->user->last_name }}</p>
+                <p>{{ $submission->user->last_name }} {{ $submission->user->first_name }}</p>
             </div>
             <div class="text-center" style="width:40%">
-                <p class="fw-bold mb-0">TRƯỞNG PHÒNG CTSV</p><br><br><br>
+                {{-- ✅ Chữ ký động --}}
+                <p class="fw-bold mb-0">{{ strtoupper($submission->form->signtitle ?? 'TRƯỞNG PHÒNG CTSV') }}</p>
+                <br><br><br>
                 <p>(Ký, ghi rõ họ tên, đóng dấu)</p>
+                @if($submission->form->signname ?? null)
+                    <p>{{ $submission->form->signname }}</p>
+                @endif
             </div>
         </div>
     </div>
