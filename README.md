@@ -2,7 +2,7 @@
 
 ## Dự án
 
-**Tên:** Ứng dụng web cho phòng công tác sinh viên.  
+**Tên:** Ứng dụng web cho Phòng CTSV.  
 **Công nghệ:** Laravel 12, PHP 8.2, MySQL, Bootstrap 5  
 **Công cụ:** GitHub
 
